@@ -2,8 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Form(models.Model):
-    like = models.TextField(verbose_name='Сильные стороны' null=False)
-    dislike = models.TextField(verbose_name='Области роста'null=False)
+    like = models.TextField(verbose_name='Сильные стороны', null=False)
+    dislike = models.TextField(verbose_name='Области роста', null=False)
 
     hard_skills = models.IntegerField() # отрпавлять по ползунку
     productivity = models.IntegerField() # отрпавлять по ползунку
