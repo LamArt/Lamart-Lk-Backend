@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Form(models.Model):
     like = models.TextField(verbose_name='Сильные стороны', null=False)
     dislike = models.TextField(verbose_name='Области роста', null=False)
@@ -27,13 +28,12 @@ class Team(models.Model):
 class Emploee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     link = models.CharField(max_length=100)
-    name = models.CharField(max_length=70)
     team = models.ForeignKey(Team, on_delete=models.PROTECT)
     is_team_leed = models.BooleanField(default=False)
-    status_level = models.PositiveIntegerField(null=False) # чем больше число - тем меньшее место человек занивает в иерархии
+    status_level = models.PositiveIntegerField() # чем больше число - тем меньшее место человек занивает в иерархии
 
     def __str__(self):
-        return self.name
+        return User.first_name
 
 class Project(models.Model):
     name = models.CharField(max_length=70)
