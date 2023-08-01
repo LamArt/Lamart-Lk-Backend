@@ -105,6 +105,8 @@ SOCIALACCOUNT_PROVIDERS = {
     },
 }
 
+AUTH_USER_MODEL = "performance_review.User"
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
