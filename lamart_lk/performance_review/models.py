@@ -3,13 +3,15 @@ from django.contrib.auth.models import User
 
 
 class Form(models.Model):
+    # title = models.CharField(verbose_name='name', max_length=32)
+
     like = models.TextField(verbose_name='Сильные стороны', null=False)
     dislike = models.TextField(verbose_name='Области роста', null=False)
 
-    hard_skills = models.IntegerField() # отрпавлять по ползунку
-    productivity = models.IntegerField() # отрпавлять по ползунку
-    communication = models.IntegerField() # отрпавлять по ползунку
-    initiative = models.IntegerField() # отрпавлять по ползунку
+    hard_skills = models.IntegerField(verbose_name='hard skill') # отрпавлять по ползунку
+    productivity = models.IntegerField(verbose_name='productivity') # отрпавлять по ползунку
+    communication = models.IntegerField(verbose_name='communication') # отрпавлять по ползунку
+    initiative = models.IntegerField(verbose_name='initiative2') # отрпавлять по ползунку
 
     # self review
     achievements = models.TextField(null=True)
@@ -18,6 +20,11 @@ class Form(models.Model):
     # team leed 
     team_leed_grade = models.IntegerField(null=True) # отрпавлять по ползунку
     feedback_date = models.DateField(null=True)
+    # def __str__(self):
+    #     return self.title
+    # class Meta:
+    #     verbose_name = 'Form'
+    #     verbose_name_plural = 'Forms'
 
 class Team(models.Model):
     name = models.CharField(max_length=50)
