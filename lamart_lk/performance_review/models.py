@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from allauth.socialaccount.models import SocialAccount
+from django.dispatch import receiver
+from allauth.account.signals import user_signed_up
 
 
 class User(AbstractUser):
@@ -47,6 +49,14 @@ class Team(models.Model):
     def __str__(self):
         return self.name
     
+@receiver(user_signed_up)
+def populate_profile(sociallogin, user, **kwargs):
+    user_data = user.socialaccount_set.filter(provider='yandex')[0].extra_data
+    user.profile.avatar_url = "https://avatars.yandex.net/get-yapic/" + user_data['avatar_id'] + "/islands-retina-middle"
+    user.profile.gender = user_data['sex']
+    user.profile.birthday = user_data['birthday']
+    user.profile.save()
+
 
 """ class Project(models.Model):
     name = models.CharField(max_length=70)
