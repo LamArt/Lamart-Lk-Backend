@@ -1,30 +1,45 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+from allauth.socialaccount.models import SocialAccount
 
+
+class User(AbstractUser):
+    surname = models.CharField(max_length=50, null=True)
+    team = models.ForeignKey('Team', on_delete=models.PROTECT, null=True)
+    birthday = models.CharField(max_length=10, null=True)
+    phone = models.CharField(max_length=12, null=True)
+    gender = models.CharField(max_length=10, null=True)
+    is_team_leed = models.BooleanField(default=False)
+    status_level = models.PositiveIntegerField(null=True) # чем больше число - тем меньшее место человек занивает в иерархии
+
+    def __str__(self):
+        return self.first_name
+    
+    def get_full_name(self):
+        full_name = "%s %s %s" % (self.first_name, self.last_name, self.surname)
+        return full_name.strip()
 
 class Form(models.Model):
-    # title = models.CharField(verbose_name='name', max_length=32)
-
-    like = models.TextField(verbose_name='Сильные стороны', null=False)
-    dislike = models.TextField(verbose_name='Области роста', null=False)
-
-    hard_skills = models.IntegerField(verbose_name='hard skill') # отрпавлять по ползунку
-    productivity = models.IntegerField(verbose_name='productivity') # отрпавлять по ползунку
-    communication = models.IntegerField(verbose_name='communication') # отрпавлять по ползунку
-    initiative = models.IntegerField(verbose_name='initiative2') # отрпавлять по ползунку
+    created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='created_forms')
+    about = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='forms_about')
+    like = models.TextField(verbose_name='Сильные стороны')
+    dislike = models.TextField(verbose_name='Области роста')
+    hard_skills = models.IntegerField()
+    productivity = models.IntegerField()
+    communication = models.IntegerField()
+    initiative = models.IntegerField()
 
     # self review
     achievements = models.TextField(null=True)
     ways_to_achieve = models.TextField(null=True)
 
     # team leed 
-    team_leed_grade = models.IntegerField(null=True) # отрпавлять по ползунку
+    leader_grade = models.IntegerField(null=True) # лидерские качества
+    feedback = models.IntegerField(null=True) # работа с обратной свзязью, работа с информацией
+    teamwork = models.IntegerField(null=True) # организация командной работы, атмосфера в коллективе
+    stress_resistance = models.IntegerField(null=True) 
+
     feedback_date = models.DateField(null=True)
-    # def __str__(self):
-    #     return self.title
-    # class Meta:
-    #     verbose_name = 'Form'
-    #     verbose_name_plural = 'Forms'
 
 class Team(models.Model):
     name = models.CharField(max_length=50)
@@ -32,21 +47,12 @@ class Team(models.Model):
     def __str__(self):
         return self.name
     
-class Emploee(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    link = models.CharField(max_length=100)
-    team = models.ForeignKey(Team, on_delete=models.PROTECT)
-    is_team_leed = models.BooleanField(default=False)
-    status_level = models.PositiveIntegerField() # чем больше число - тем меньшее место человек занивает в иерархии
 
-    def __str__(self):
-        return User.first_name
-
-class Project(models.Model):
+""" class Project(models.Model):
     name = models.CharField(max_length=70)
     discription = models.TextField()
     is_complited = models.BooleanField(default=True)
-    members = models.ManyToManyField(Emploee, related_name='projects')
+    members = models.ManyToManyField(User, related_name='projects', null=True)
 
     def __str__(self):
-        return self.name
+        return self.name """
