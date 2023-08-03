@@ -93,19 +93,25 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+} 
+
+# добавить или изменить приложения можно ниже  
+# также это можно сделать через админ панель
+# https://django-allauth.readthedocs.io/en/latest/providers.html
 
 SOCIALACCOUNT_PROVIDERS = {
     'yandex': {
         'APP': {
-            'client_id': '2cbe4d4ecf0446a6bfca999c471f5b76',
-            'secret': '7aeb8970399646faaae22d1f4b624c37',
+            'client_id': '2cbe4d4ecf0446a6bfca999c471f5b76', # тестовое приложение
+            'secret': '7aeb8970399646faaae22d1f4b624c37', # тестовое приложение 
             'key': ''
         }
     },
 }
 
-AUTH_USER_MODEL = "performance_review.User"
+AUTH_USER_MODEL = "performance_review.User" # кастомная пользовательская модель
+SOCIALACCOUNT_AUTO_SIGNUP = True
+#LOGIN_REDIRECT_URL = '' редирект после логина
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
