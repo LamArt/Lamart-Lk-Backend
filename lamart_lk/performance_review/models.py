@@ -13,8 +13,10 @@ class User(AbstractUser):
     phone = models.CharField(max_length=12, null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
     is_team_leed = models.BooleanField(default=False)
-    status_level = models.PositiveIntegerField(null=True, blank=True) # чем больше число - тем меньшее место человек занивает в иерархии
-
+    status_level = models.PositiveIntegerField(null=True, blank=True) 
+    """чем больше число - тем меньшее место человек занивает в иерархии"""
+    
+    avatar_url = models.CharField(max_length=256, blank=True, null=True)
     def __str__(self):
         return self.first_name
     
@@ -29,7 +31,8 @@ class User(AbstractUser):
     def populate_user(sociallogin, user,**kwargs):
         print(sociallogin.account.extra_data)
         user.birthday = sociallogin.account.extra_data['birthday']
-        user.avatar_url = "https://avatars.yandex.net/get-yapic/" + sociallogin.account.extra_data['default_avatar_id'] + "/islands-retina-middle"
+        if sociallogin.account.extra_data['is_avatar_empty']:
+            user.avatar_url = "https://avatars.yandex.net/get-yapic/" + sociallogin.account.extra_data['default_avatar_id'] + "/islands-retina-middle"
         user.gender = sociallogin.account.extra_data['sex']
         user.phone = sociallogin.account.extra_data['default_phone']
         user.save()
@@ -62,23 +65,12 @@ class Team(models.Model):
     def __str__(self):
         return self.name
     
-# @receiver(user_signed_up)
-# def populate_profile(request, user, **kwargs):
-#     """ user_data = user.socialaccount_set.filter(provider='yandex')[0].extra_data
-#     user.profile.avatar_url = "https://avatars.yandex.net/get-yapic/" + user_data['default_avatar_id'] + "/islands-retina-middle"
-#     user.profile.gender = user_data['sex']
-#     user.profile.birthday = user_data['birthday']
-#     user.profile.save() """
-#     user_data = SocialAccount.objects.get(user=request.user).extra_data
-#     print(user_data)
-#     # User.objects.get(user=request.user).birthday = user_data.get('birthday')
-#     # User.objects.get(user=request.user).gender = user_data.get('sex')
 
-""" class Project(models.Model):
-    name = models.CharField(max_length=70)
-    discription = models.TextField()
-    is_complited = models.BooleanField(default=True)
-    members = models.ManyToManyField(User, related_name='projects', null=True)
+# class Project(models.Model):
+#     name = models.CharField(max_length=70)
+#     discription = models.TextField()
+#     is_complited = models.BooleanField(default=True)
+#     members = models.ManyToManyField(User, related_name='projects', null=True)
 
-    def __str__(self):
-        return self.name """
+#     def __str__(self):
+#         return self.name
