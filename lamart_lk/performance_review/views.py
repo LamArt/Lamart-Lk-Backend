@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from .forms import *
 from rest_framework import generics
 from .models import Form
@@ -13,6 +14,4 @@ class Form_EDIT(generics.RetrieveUpdateDestroyAPIView): # изменение и 
      #permission_classes = (IsAdminUser)
 
 def new_review_form(request):
-    return 0 # отрендерить шаблон с формой
-
-
+    return render(request, 'performance_review/main.html')
