@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -110,7 +111,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 AUTH_USER_MODEL = "performance_review.User" # кастомная пользовательская модель
-SOCIALACCOUNT_AUTO_SIGNUP = True
+#SOCIALACCOUNT_AUTO_SIGNUP = True
 #LOGIN_REDIRECT_URL = '' редирект после логина
 
 # Password validation

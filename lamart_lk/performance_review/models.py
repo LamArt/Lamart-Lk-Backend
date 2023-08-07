@@ -6,13 +6,14 @@ from allauth.account.signals import user_signed_up
 
 
 class User(AbstractUser):
-    surname = models.CharField(max_length=50, null=True)
-    team = models.ForeignKey('Team', on_delete=models.PROTECT, null=True)
-    birthday = models.CharField(max_length=10, null=True)
-    phone = models.CharField(max_length=12, null=True)
-    gender = models.CharField(max_length=10, null=True)
+    email = models.EmailField(blank=False, unique=True)
+    surname = models.CharField(max_length=50, null=True, blank=True)
+    team = models.ForeignKey('Team', on_delete=models.PROTECT, null=True, blank=True)
+    birthday = models.CharField(max_length=10, null=True, blank=True)
+    phone = models.CharField(max_length=12, null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
     is_team_leed = models.BooleanField(default=False)
-    status_level = models.PositiveIntegerField(null=True) # чем больше число - тем меньшее место человек занивает в иерархии
+    status_level = models.PositiveIntegerField(null=True, blank=True) # чем больше число - тем меньшее место человек занивает в иерархии
 
     def __str__(self):
         return self.first_name
@@ -20,10 +21,22 @@ class User(AbstractUser):
     def get_full_name(self):
         full_name = "%s %s %s" % (self.first_name, self.last_name, self.surname)
         return full_name.strip()
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    @receiver(user_signed_up)
+    def populate_user(sociallogin, user,**kwargs):
+        print(sociallogin.account.extra_data)
+        user.birthday = sociallogin.account.extra_data['birthday']
+        user.avatar_url = "https://avatars.yandex.net/get-yapic/" + sociallogin.account.extra_data['default_avatar_id'] + "/islands-retina-middle"
+        user.gender = sociallogin.account.extra_data['sex']
+        user.phone = sociallogin.account.extra_data['default_phone']
+        user.save()
 
 class Form(models.Model):
-    created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='created_forms')
-    about = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='forms_about')
+    created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='created_forms', blank=False)
+    about = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='forms_about', blank=False)
     like = models.TextField(verbose_name='Сильные стороны')
     dislike = models.TextField(verbose_name='Области роста')
     hard_skills = models.IntegerField()
@@ -32,16 +45,16 @@ class Form(models.Model):
     initiative = models.IntegerField()
 
     # self review
-    achievements = models.TextField(null=True)
-    ways_to_achieve = models.TextField(null=True)
+    achievements = models.TextField(null=True, blank=True)
+    ways_to_achieve = models.TextField(null=True, blank=True)
 
     # team leed 
-    leader_grade = models.IntegerField(null=True) # лидерские качества
-    feedback = models.IntegerField(null=True) # работа с обратной свзязью, работа с информацией
-    teamwork = models.IntegerField(null=True) # организация командной работы, атмосфера в коллективе
-    stress_resistance = models.IntegerField(null=True) 
+    leader_grade = models.IntegerField(null=True, blank=True) # лидерские качества
+    feedback = models.IntegerField(null=True, blank=True) # работа с обратной свзязью, работа с информацией
+    teamwork = models.IntegerField(null=True, blank=True) # организация командной работы, атмосфера в коллективе
+    stress_resistance = models.IntegerField(null=True, blank=True) 
 
-    feedback_date = models.DateField(null=True)
+    feedback_date = models.DateField(null=True, blank=True)
 
 class Team(models.Model):
     name = models.CharField(max_length=50)
@@ -49,14 +62,17 @@ class Team(models.Model):
     def __str__(self):
         return self.name
     
-@receiver(user_signed_up)
-def populate_profile(sociallogin, user, **kwargs):
-    user_data = user.socialaccount_set.filter(provider='yandex')[0].extra_data
-    user.profile.avatar_url = "https://avatars.yandex.net/get-yapic/" + user_data['avatar_id'] + "/islands-retina-middle"
-    user.profile.gender = user_data['sex']
-    user.profile.birthday = user_data['birthday']
-    user.profile.save()
-
+# @receiver(user_signed_up)
+# def populate_profile(request, user, **kwargs):
+#     """ user_data = user.socialaccount_set.filter(provider='yandex')[0].extra_data
+#     user.profile.avatar_url = "https://avatars.yandex.net/get-yapic/" + user_data['default_avatar_id'] + "/islands-retina-middle"
+#     user.profile.gender = user_data['sex']
+#     user.profile.birthday = user_data['birthday']
+#     user.profile.save() """
+#     user_data = SocialAccount.objects.get(user=request.user).extra_data
+#     print(user_data)
+#     # User.objects.get(user=request.user).birthday = user_data.get('birthday')
+#     # User.objects.get(user=request.user).gender = user_data.get('sex')
 
 """ class Project(models.Model):
     name = models.CharField(max_length=70)
