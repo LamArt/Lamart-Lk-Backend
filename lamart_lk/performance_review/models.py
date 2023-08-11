@@ -24,8 +24,6 @@ class User(AbstractUser):
         full_name = "%s %s %s" % (self.first_name, self.last_name, self.surname)
         return full_name.strip()
     
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
 
     @receiver(user_signed_up)
     def populate_user(sociallogin, user,**kwargs):
