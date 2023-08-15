@@ -16,7 +16,7 @@ class NewReviewFormView(View):
             'full_name': request.user.get_full_name(),
             'is_team_lead': request.user.is_team_leed,
             'gender': request.user.gender,
-            'teammates': list(User.objects.filter(team=request.user.team).values('username', 'first_name', 'last_name')),
+            'teammates': list(User.objects.filter(team=request.user.team).values('username', 'first_name', 'last_name', 'gender')),
         }
         return JsonResponse(context)
     
