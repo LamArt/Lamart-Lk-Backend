@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from allauth.socialaccount.models import SocialAccount
 from django.dispatch import receiver
 from allauth.account.signals import user_signed_up
 

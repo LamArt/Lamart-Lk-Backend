@@ -1,24 +1,20 @@
-from django.contrib.auth.decorators import login_required
 from .forms import *
 from rest_framework import generics
-from .models import Form, User
-from .serializers import FormSerializer
-from django.shortcuts import render
-from .forms import NewReview
-from django.http import HttpResponseRedirect, JsonResponse
-from django.http import JsonResponse, HttpResponseRedirect
-from django.views import View
+from .models import *
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-class NewReviewFormView(View):
-    #@login_required
+class NewReviewFormView(APIView):
     def get(self, request):
+        teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
             'full_name': request.user.get_full_name(),
             'is_team_lead': request.user.is_team_leed,
             'gender': request.user.gender,
-            'teammates': list(User.objects.filter(team=request.user.team).values('username', 'first_name', 'last_name', 'gender')),
+            'teammates': list(teammates.values('username', 'first_name', 'last_name', 'gender', 'status_level')),
         }
-        return JsonResponse(context)
+        return Response(context)
     
     # def post(self, request):
     #     form = AppForm(request.POST)
