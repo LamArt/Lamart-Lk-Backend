@@ -21,7 +21,7 @@ class User(AbstractUser):
         return self.first_name
     
     def get_full_name(self):
-        full_name = "%s %s %s" % (self.first_name, self.last_name, self.surname)
+        full_name = "%s %s %s" % (self.last_name, self.first_name, self.surname)
         return full_name.strip()
     
 
