@@ -1,11 +1,14 @@
 from .forms import *
-from rest_framework import generics
 from .models import *
-from django.http import JsonResponse
+from .serializers import *
+from rest_framework import permissions, authentication, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 class NewReviewFormView(APIView):
+
+    #authentication_classes = [authentication.SessionAuthentication]
+    #permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
@@ -16,34 +19,9 @@ class NewReviewFormView(APIView):
         }
         return Response(context)
     
-    # def post(self, request):
-    #     form = AppForm(request.POST)
-    #     if form.is_valid():
-    #         data = form.cleaned_data
-    #         form_obj = Form(
-    #             created_by=request.user,
-    #             like=data['like'],
-    #             dislike=data['dislike'],
-    #             hard_skills=data['hard_skills'],
-    #             productivity=data['productivity'],
-    #             communication=data['communication'],
-    #             initiative=data['initiative']
-    #         )
-    #         form_obj.save()
-    #         return HttpResponseRedirect('')  # Перенаправить после отправки
-        
-    #     current_user = request.user
-    #     surname = current_user.surname
-    #     team = current_user.team.name  
-    #     is_team_lead = current_user.is_team_leed
-    #     teammates = User.objects.filter(team=current_user.team)
-
-    #     context = {
-    #         'surname': surname,
-    #         'team': team,
-    #         'is_team_lead': is_team_lead,
-    #         'teammates': list(teammates.values()),
-    #         'form': form
-    #     }
-
-    #     return JsonResponse(context)
+    def post(self, request):
+        serialiser = FormSerializer(data=request.data)
+        if serialiser.is_valid():
+            serialiser.save()
+            return Response(serialiser.data, status=status.HTTP_201_CREATED)
+        return Response(serialiser.errors, status=status.HTTP_400_BAD_REQUEST)
