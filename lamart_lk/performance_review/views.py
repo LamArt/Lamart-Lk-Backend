@@ -6,20 +6,25 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 class NewReviewFormView(APIView):
+    """Creating new form for performance review"""
 
     #authentication_classes = [authentication.SessionAuthentication]
     #permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
+        """Gives data about loged in employee and teammates"""
+
         teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
             'full_name': request.user.get_full_name(),
             'is_team_lead': request.user.is_team_leed,
             'gender': request.user.gender,
+            'team': request.user.team.name,
             'teammates': list(teammates.values('username', 'first_name', 'last_name', 'gender', 'status_level')),
         }
         return Response(context)
     
     def post(self, request):
+        """Save new form"""
         serialiser = FormSerializer(data=request.data)
         if serialiser.is_valid():
             serialiser.save()

@@ -49,11 +49,12 @@ class Form(models.Model):
     ways_to_achieve = models.TextField(null=True, blank=True)
 
     # team leed 
-    leader_grade = models.IntegerField(null=True, blank=True) # лидерские качества
-    feedback = models.IntegerField(null=True, blank=True) # работа с обратной свзязью, работа с информацией
-    teamwork = models.IntegerField(null=True, blank=True) # организация командной работы, атмосфера в коллективе
+    leader_skills = models.IntegerField(null=True, blank=True)
+    feedback = models.IntegerField(null=True, blank=True)
+    teamwork = models.IntegerField(null=True, blank=True)
     stress_resistance = models.IntegerField(null=True, blank=True) 
 
+    # feedback
     feedback_date = models.DateField(null=True, blank=True)
 
 class Team(models.Model):
