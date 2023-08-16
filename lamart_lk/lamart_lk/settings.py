@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     
+    'rest_framework',
     #allauth config
     'allauth',
     'allauth.account',
@@ -103,8 +103,8 @@ DATABASES = {
 SOCIALACCOUNT_PROVIDERS = {
     'yandex': {
         'APP': {
-            'client_id': '2cbe4d4ecf0446a6bfca999c471f5b76', # тестовое приложение
-            'secret': '7aeb8970399646faaae22d1f4b624c37', # тестовое приложение 
+            'client_id': 'c120ba35adaf4278a8277e542b1a0cbd', # тестовое приложение
+            'secret': '4f47e8d1537948c79f0214f039d4387c', # тестовое приложение 
             'key': ''
         }
     },
@@ -112,7 +112,6 @@ SOCIALACCOUNT_PROVIDERS = {
 
 AUTH_USER_MODEL = "performance_review.User" # кастомная пользовательская модель
 #SOCIALACCOUNT_AUTO_SIGNUP = True
-#LOGIN_REDIRECT_URL = '' редирект после логина
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
