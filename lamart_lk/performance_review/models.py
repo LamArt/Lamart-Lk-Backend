@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from allauth.socialaccount.models import SocialAccount
 from django.dispatch import receiver
 from allauth.account.signals import user_signed_up
 
@@ -21,7 +20,7 @@ class User(AbstractUser):
         return self.first_name
     
     def get_full_name(self):
-        full_name = "%s %s %s" % (self.first_name, self.last_name, self.surname)
+        full_name = "%s %s %s" % (self.last_name, self.first_name, self.surname)
         return full_name.strip()
     
 
@@ -50,11 +49,12 @@ class Form(models.Model):
     ways_to_achieve = models.TextField(null=True, blank=True)
 
     # team leed 
-    leader_grade = models.IntegerField(null=True, blank=True) # лидерские качества
-    feedback = models.IntegerField(null=True, blank=True) # работа с обратной свзязью, работа с информацией
-    teamwork = models.IntegerField(null=True, blank=True) # организация командной работы, атмосфера в коллективе
+    leader_skills = models.IntegerField(null=True, blank=True)
+    feedback = models.IntegerField(null=True, blank=True)
+    teamwork = models.IntegerField(null=True, blank=True)
     stress_resistance = models.IntegerField(null=True, blank=True) 
 
+    # feedback
     feedback_date = models.DateField(null=True, blank=True)
 
 class Team(models.Model):
