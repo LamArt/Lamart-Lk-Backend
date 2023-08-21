@@ -5,7 +5,7 @@ from allauth.account.signals import user_signed_up
 
 
 class User(AbstractUser):
-    email = models.EmailField(blank=False, unique=True)
+    email = models.EmailField(blank=False, unique=False)
     surname = models.CharField(max_length=50, null=True, blank=True)
     team = models.ForeignKey('Team', on_delete=models.PROTECT, null=True, blank=True)
     birthday = models.CharField(max_length=10, null=True, blank=True)

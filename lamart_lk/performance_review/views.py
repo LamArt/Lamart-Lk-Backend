@@ -1,15 +1,19 @@
-from .forms import *
 from .models import *
 from .serializers import *
 from rest_framework import permissions, authentication, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 
 class NewReviewFormView(APIView):
     """Creating new form for performance review"""
 
-    #authentication_classes = [authentication.SessionAuthentication]
-    #permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @swagger_auto_schema(
+            responses={200: 'ok', 403: 'forbidden'},
+    )
     def get(self, request):
         """Gives data about loged in employee and teammates"""
 
@@ -23,6 +27,10 @@ class NewReviewFormView(APIView):
         }
         return Response(context)
     
+    @swagger_auto_schema(
+            query_serializer=FormSerializer,
+            responses={201: 'form saved successfully', 400: 'bad request', 403: 'forbidden'},
+    )
     def post(self, request):
         """Save new form"""
         serialiser = FormSerializer(data=request.data)
