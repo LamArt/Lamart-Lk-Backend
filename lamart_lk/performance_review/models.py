@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
-from allauth.account.signals import user_signed_up
 
 
 class User(AbstractUser):
@@ -11,8 +10,8 @@ class User(AbstractUser):
     birthday = models.CharField(max_length=10, null=True, blank=True)
     phone = models.CharField(max_length=12, null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
-    is_team_leed = models.BooleanField(default=False)
-    status_level = models.PositiveIntegerField(null=True, blank=True) 
+    is_team_lead = models.BooleanField(default=False)
+    status_level = models.PositiveIntegerField(null=True, blank=True)
     """чем больше число - тем меньшее место человек занивает в иерархии"""
     
     avatar_url = models.CharField(max_length=256, blank=True, null=True)
@@ -23,16 +22,6 @@ class User(AbstractUser):
         full_name = "%s %s %s" % (self.last_name, self.first_name, self.surname)
         return full_name.strip()
     
-
-    @receiver(user_signed_up)
-    def populate_user(sociallogin, user,**kwargs):
-        print(sociallogin.account.extra_data)
-        user.birthday = sociallogin.account.extra_data['birthday']
-        if sociallogin.account.extra_data['is_avatar_empty']:
-            user.avatar_url = "https://avatars.yandex.net/get-yapic/" + sociallogin.account.extra_data['default_avatar_id'] + "/islands-retina-middle"
-        user.gender = sociallogin.account.extra_data['sex']
-        user.phone = sociallogin.account.extra_data['default_phone']
-        user.save()
 
 class Form(models.Model):
     created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='created_forms', blank=False)
