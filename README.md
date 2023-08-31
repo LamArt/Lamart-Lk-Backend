@@ -12,4 +12,4 @@ powershell:
 done!
 
 ## Docs
-After depoying watch API doc here -> http://127.0.0.1:8000/redoc/
+After depoying watch API doc here -> http://127.0.0.1:8000/redoc/ or http://127.0.0.1:8000/swagger/
