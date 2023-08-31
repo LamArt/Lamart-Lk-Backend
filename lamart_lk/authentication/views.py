@@ -4,6 +4,7 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .providers import Provider
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
 @authentication_classes([])
 @swagger_auto_schema(
@@ -37,5 +38,9 @@ def exchange_token(request, *args, **kwargs):
     except ValueError:
         return Response(f"organisation {request.data['organisation']} don't have @{provider.data['default_email'].split('@')[1]} domain")
     
-    print(provider.get_user())
-    return Response(provider.data, status=status.HTTP_200_OK)
+    refresh = RefreshToken.for_user(provider.get_user())
+    tokens = {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    } 
+    return Response(tokens, status=status.HTTP_200_OK)

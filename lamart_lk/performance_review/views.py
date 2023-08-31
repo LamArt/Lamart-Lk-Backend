@@ -8,7 +8,6 @@ from drf_yasg.utils import swagger_auto_schema
 class NewReviewFormView(APIView):
     """Creating new form for performance review"""
 
-    authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     
     @swagger_auto_schema(
