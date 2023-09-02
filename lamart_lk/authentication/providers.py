@@ -48,16 +48,16 @@ class Provider():
 
         try:
             user = User.objects.get(username=self.data['default_email'])
-            # user. (
-            #     password = self.token,
-            #     first_name = self.data['first_name'],
-            #     last_name = self.data['last_name'],
-            #     avatar_url = self.data['default_avatar_id'],
-            #     birthday = self.data['birthday'],
-            #     email = self.data['default_email'],
-            #     gender = self.data['sex'],
-            #     phone = self.data['default_phone'],
-            # )
+            User.objects.filter(id = user.pk).update(
+                password = self.token,
+                first_name = self.data['first_name'],
+                last_name = self.data['last_name'],
+                avatar_url = self.data['default_avatar_id'],
+                birthday = self.data['birthday'],
+                email = self.data['default_email'],
+                gender = self.data['sex'],
+                phone = self.data['default_phone'],
+            )
             return user
         except User.DoesNotExist:
             new_user = User.objects.create(
@@ -72,7 +72,3 @@ class Provider():
                 phone = self.data['default_phone'],
             )
             return new_user
-        # token = ProviderToken.objects.filter(user=new_user).update_or_create(
-        #     access_token = self.token,
-        #     user = new_user
-        # )

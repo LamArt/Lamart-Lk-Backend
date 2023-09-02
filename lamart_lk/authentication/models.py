@@ -7,3 +7,4 @@ class ProviderToken(models.Model):
     expires_in = models.PositiveIntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='provider_tokens')
     provider = models.CharField(max_length=64)
+    organisation = models.CharField(max_length=256)
