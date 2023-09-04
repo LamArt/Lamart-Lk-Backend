@@ -12,3 +12,7 @@ done!
 
 ## Docs
 After depoying watch API doc here -> http://127.0.0.1:8000/redoc/
+
+# Authentication
+API uses bearer JWT authentication
+For login or sign up: exchange provider oauth token to refresh and acess jwt
