@@ -1,6 +1,6 @@
 import requests
-from .models import ProviderToken
-from performance_review.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 # all info about providers e.g. urls, auth, organisation domains
 PROVIDERS = {
