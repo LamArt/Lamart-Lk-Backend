@@ -8,7 +8,6 @@ from drf_yasg.utils import swagger_auto_schema
 class NewReviewFormView(APIView):
     """Creating new form for performance review"""
 
-    authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     
     @swagger_auto_schema(
@@ -20,7 +19,7 @@ class NewReviewFormView(APIView):
         teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
             'full_name': request.user.get_full_name(),
-            'is_team_lead': request.user.is_team_leed,
+            'is_team_lead': request.user.is_team_lead,
             'gender': request.user.gender,
             'team': request.user.team.name,
             'teammates': list(teammates.values('username', 'first_name', 'last_name', 'gender', 'status_level')),
