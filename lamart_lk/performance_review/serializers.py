@@ -4,5 +4,5 @@ from .models import Form
 class FormSerializer(serializers.ModelSerializer):
     class Meta:
         model = Form
-        fields = "__all__"
+        exclude = ['created_by', 'about', 'feedback_date']
         

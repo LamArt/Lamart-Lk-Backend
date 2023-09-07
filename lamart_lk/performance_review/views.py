@@ -33,7 +33,10 @@ class NewReviewFormView(APIView):
     def post(self, request):
         """Save new form"""
         serialiser = FormSerializer(data=request.data)
-        if serialiser.is_valid():
-            serialiser.save()
+        if not serialiser.is_valid():
+            return Response(serialiser.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            serialiser.save(created_by = request.user, about = User.objects.get(username = request.data['about']))
             return Response(serialiser.data, status=status.HTTP_201_CREATED)
-        return Response(serialiser.errors, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response(f"user {request.data['about']} does not exist", status=status.HTTP_400_BAD_REQUEST)
