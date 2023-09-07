@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
 
-    'performance_review.apps.PerformanceReviewConfig',
-    'authentication.apps.AuthenticationConfig'
+    'authentication.apps.AuthenticationConfig',
+    'performance_review.apps.PerformanceReviewConfig'
 ]
 
 SITE_ID = 1
@@ -126,7 +126,7 @@ SOCIALACCOUNT_PROVIDERS = {
     },
 }
 
-AUTH_USER_MODEL = "performance_review.User" # кастомная пользовательская модель
+AUTH_USER_MODEL = "authentication.User" # кастомная пользовательская модель
 #SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Password validation

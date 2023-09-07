@@ -1,9 +1,11 @@
 from .models import *
 from .serializers import *
-from rest_framework import permissions, authentication, status
+from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class NewReviewFormView(APIView):
     """Creating new form for performance review"""
