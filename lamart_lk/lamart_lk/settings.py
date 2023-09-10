@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     'authentication.apps.AuthenticationConfig',
-    'performance_review.apps.PerformanceReviewConfig'
+    'performance_review.apps.PerformanceReviewConfig',
+    'user_profile.apps.UserProfileConfig'
 ]
 
 SITE_ID = 1
