@@ -24,5 +24,6 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('review/', include('performance_review.urls'), name='performance review'),
-    path('auth/', include('authentication.urls'), name='authentication')
+    path('auth/', include('authentication.urls'), name='authentication'),
+    path('profile/', include('user_profile.urls'), name='profile')
 ]
