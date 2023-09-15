@@ -8,7 +8,10 @@ User = get_user_model()
 
 class ProfileData(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    
+
+    @swagger_auto_schema(
+            responses={200: 'ok', 403: 'forbidden'},
+    )
     def get(self, request):
         data ={
             'first_name': request.user.first_name,
@@ -22,8 +25,12 @@ class ProfileData(APIView):
             'gender': request.user.gender,
             'team': request.user.team,
         }
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
     
+    @swagger_auto_schema(
+            responses={201: 'created', 400: 'bad request', 403: 'forbidden'},
+            query_serializer=ProfileSerializer
+    )
     def put(self, request):
         serialiser = ProfileSerializer(request.user, data=request.data)
         if serialiser.is_valid():
