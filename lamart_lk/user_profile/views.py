@@ -4,16 +4,21 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from .serializers import *
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
+
 
 class ProfileData(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(
-            responses={200: 'ok', 403: 'forbidden'},
+        responses={200: 'ok', 403: 'forbidden'},
+        operation_id='Get profile',
+        tags=['PROFILE'],
     )
     def get(self, request):
-        data ={
+        """Gives logged user profile data"""
+        data = {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'surname': request.user.surname,
@@ -26,12 +31,15 @@ class ProfileData(APIView):
             'team': request.user.team,
         }
         return Response(data, status=status.HTTP_200_OK)
-    
+
     @swagger_auto_schema(
-            responses={201: 'created', 400: 'bad request', 403: 'forbidden'},
-            query_serializer=ProfileSerializer
+        responses={201: 'created', 400: 'bad request', 403: 'forbidden'},
+        query_serializer=ProfileSerializer,
+        operation_id='Update profile',
+        tags=['PROFILE'],
     )
     def put(self, request):
+        """Takes new data returns updated profile data"""
         serialiser = ProfileSerializer(request.user, data=request.data)
         if serialiser.is_valid():
             serialiser.save()
