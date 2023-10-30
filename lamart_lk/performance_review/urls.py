@@ -3,5 +3,5 @@ from .views import *
 
 
 urlpatterns = [
-    path('new/', NewReviewFormView.as_view(), name='new performance review'),
+    path('teammates/', TeammatesAPIView.as_view(), name='get teammates'),
 ]
