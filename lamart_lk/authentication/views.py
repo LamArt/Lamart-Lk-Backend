@@ -1,7 +1,7 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.decorators import authentication_classes, api_view
-from .providers import Provider
+from .providers import YandexProvider, JiraProvider
 from .serialisers import *
 from rest_framework import status
 from drf_yasg import openapi
@@ -25,18 +25,18 @@ openapi_response_samples = {
     method='post',
     request_body=ProviderSerialiser,  # query_serializer
     responses=openapi_response_samples,
-    __name__='exchange_token',
-    operation_id='Create JWT token',
+    __name__='exchange_provider_token',
+    operation_id='Create JWT provider token',
     tags=['AUTH'],
     security=[None]
 )
 @api_view(['POST'])
-def exchange_token(request, *args, **kwargs):
+def exchange_provider_token(request, *args, **kwargs):
     """Takes provider JWT, organisation returns access and refresh JWT"""
 
     # validating provider
     try:
-        provider = Provider(request.data['provider'])
+        provider = YandexProvider(request.data['provider'])
     except KeyError:
         return Response('provider does not exist', status=status.HTTP_400_BAD_REQUEST)
 
@@ -63,3 +63,36 @@ def exchange_token(request, *args, **kwargs):
         'access': str(refresh.access_token),
     }
     return Response(tokens, status=status.HTTP_201_CREATED)
+
+
+@authentication_classes([])
+@swagger_auto_schema(
+    method='post',
+    responses=openapi_response_samples,
+    request_body=ExchangeCodeSerializer,
+    __name__='exchange_code_to_token',
+    operation_id='Exchange authorization code to jira access and refresh token',
+    tags=['AUTH'],
+    security=[None]
+)
+@api_view(['POST'])
+def exchange_code_to_token(request, *args, **kwargs):
+    """Takes jira authorization code returns access and refresh JWT"""
+    try:
+        provider = JiraProvider('jira')
+    except KeyError:
+        return Response('provider does not exist', status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        authorization_code = request.data['authorization_code']
+        access_token, refresh_token = provider.get_data(authorization_code)
+    except KeyError:
+        return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
+
+    tokens = {
+        'access': access_token,
+        'refresh': refresh_token,
+    }
+    return Response(tokens, status=status.HTTP_201_CREATED)
+
+
