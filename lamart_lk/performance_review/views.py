@@ -1,3 +1,5 @@
+import datetime
+
 from .models import *
 from .serializers import *
 from rest_framework import permissions, status
@@ -44,7 +46,7 @@ class EmployeeFormAPIView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         try:
-            serializer.save()
+            serializer.save(created_by=request.user, feedback_date=datetime.datetime.now())
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except User.DoesNotExist:
             return Response(f"user {request.data['about']} does not exist", status=status.HTTP_400_BAD_REQUEST)
@@ -83,7 +85,7 @@ class TeamleadFeedbackFormAPIView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         try:
-            serializer.save()
+            serializer.save(created_by=request.user, feedback_date=datetime.datetime.now())
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except User.DoesNotExist:
             return Response(f"user {request.data['about']} does not exist", status=status.HTTP_400_BAD_REQUEST)

@@ -5,11 +5,11 @@ from .models import *
 class EmployeeFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeFeedbackForm
-        exclude = ['feedback_date']
+        exclude = ['created_by', 'feedback_date']
 
 
 class TeamleadFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamLeadFeedbackForm
-        exclude = ['feedback_date']
+        exclude = ['created_by', 'feedback_date']
 
