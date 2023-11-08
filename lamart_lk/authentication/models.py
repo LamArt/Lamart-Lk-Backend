@@ -31,3 +31,6 @@ class ProviderToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='provider_tokens')
     provider = models.CharField(max_length=64)
     organisation = models.CharField(max_length=256)
+
+    def __str__(self):
+        return f'{self.user} {self.provider}'

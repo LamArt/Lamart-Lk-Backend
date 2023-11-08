@@ -1,6 +1,7 @@
 import requests
 from abc import ABC, abstractmethod
 from django.contrib.auth import get_user_model
+from .models import ProviderToken
 
 User = get_user_model()
 
@@ -16,7 +17,7 @@ PROVIDERS = {
             'lamart': 'yandex',
         }
     },
-    'jira': {
+    'atlassian': {
         'oauth_url': 'https://auth.atlassian.com/oauth/token',
         'headers': {
             'key': 'Authorization',
@@ -33,6 +34,7 @@ PROVIDERS = {
 
 class Provider(ABC):
     """contains all methods to work with social providers"""
+
     def __init__(self, provider):
         try:
             self.provider = PROVIDERS[provider]
@@ -54,6 +56,23 @@ class Provider(ABC):
     def get_user(self) -> User:
         pass
 
+    @staticmethod
+    def save_provider_tokens(tokens, expires_in, user, provider_name, organisation):
+        try:
+            provider_token, created = ProviderToken.objects.update_or_create(
+                user=user,
+                provider=provider_name,
+                organisation=organisation,
+                defaults={
+                    'access_token': tokens['access'],
+                    'refresh_token': tokens['refresh'],
+                    'expires_in': expires_in
+                }
+            )
+            return provider_token
+        except TypeError:
+            raise 'failed to save user tokens'
+
 
 class YandexProvider(Provider):
     def get_data(self, token):
@@ -72,7 +91,7 @@ class YandexProvider(Provider):
 
     def get_user(self) -> User:
         """updates and returns user instance if it exists, otherwise creates"""
-        if self.provider == PROVIDERS['yandex']:
+        try:
             new_user = User.objects.filter(username=self.data['default_email']).update_or_create(
                 username=self.data['default_email'],
                 password=self.token,
@@ -84,25 +103,29 @@ class YandexProvider(Provider):
                 gender=self.data['sex'],
                 phone=self.data['default_phone'],
             )
-        return new_user[0]
+            return new_user[0]
+        except KeyError:
+            raise 'error in getting user'
 
 
-class JiraProvider(Provider):
+class AtlassianProvider(Provider):
     def get_data(self, code):
         self.data_params['code'] = code
         self.data_params['grant_type'] = 'authorization_code'
         rq = requests.post(self.oauth_url, data=self.data_params)
         if rq.status_code == 200:
-            data = rq.json()
-            access_token = data.get('access_token')
-            refresh_token = data.get('refresh_token')
-
-            return access_token, refresh_token
+            self.data = rq.json()
         else:
             raise KeyError('not valid authorization code')
 
-    def check_organisation(self, organisation):
-        pass
-
     def get_user(self) -> User:
         pass
+
+    def refresh(self, refresh_token):
+        self.data_params['grant_type'] = 'refresh_token'
+        self.data_params['refresh_token'] = refresh_token
+        rq = requests.post(self.oauth_url, data=self.data_params)
+        if rq.status_code == 200:
+            self.data = rq.json()
+        else:
+            raise KeyError('not valid refresh token')

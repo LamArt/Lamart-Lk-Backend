@@ -11,4 +11,8 @@ class ProviderSerialiser(ModelSerializer):
 
 
 class ExchangeCodeSerializer(serializers.Serializer):
-    authorization_code = serializers.CharField(required=True, help_text="Jira authorization code")
+    authorization_code = serializers.CharField(required=True, help_text="Atlassian authorization code")
+
+
+class RefreshAtlassianSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField(required=True, help_text="Atlassian refresh token")
