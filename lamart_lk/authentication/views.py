@@ -54,8 +54,6 @@ class ExchangeProviderTokenView(APIView):
             'access': str(refresh.access_token),
         }
         user = provider.get_user()
-        print(user)
-        print(provider.data)
         try:
             provider.save_provider_tokens(tokens, 5, user, request.data['provider'],
                                           request.data['organisation'])
@@ -114,7 +112,6 @@ class RefreshAtlassianView(APIView):
             provider = AtlassianProvider('atlassian')
         except KeyError:
             return Response('provider does not exist', status=status.HTTP_400_BAD_REQUEST)
-        print(request.user)
         try:
             refresh_token = request.data['refresh_token']
             provider.refresh(refresh_token)
