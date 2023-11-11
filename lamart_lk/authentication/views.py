@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
 from .providers import YandexProvider, AtlassianProvider
-from .serialisers import ProviderSerialiser, ExchangeCodeSerializer, RefreshAtlassianSerializer
+from .serialisers import ProviderInputSerializer, ProviderSerializer, ExchangeCodeInputSerializer, RefreshInputSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.types import OpenApiTypes
@@ -10,8 +10,8 @@ from drf_spectacular.types import OpenApiTypes
 
 class ExchangeProviderTokenView(APIView):
     @extend_schema(
-        request=ProviderSerialiser,
-        responses={201: OpenApiTypes.OBJECT},
+        request=ProviderInputSerializer,
+        responses={201: ProviderSerializer},
         summary='Create JWT provider token',
         description='Takes provider JWT token, organisation returns access and refresh JWT tokens',
         tags=['auth'],
@@ -55,8 +55,8 @@ class ExchangeCodeToTokenView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        request=ExchangeCodeSerializer,
-        responses={201: OpenApiTypes.OBJECT},
+        request=ExchangeCodeInputSerializer,
+        responses={201: ProviderSerializer},
         summary='Exchange code to atlassian JWT token',
         description='Takes authorization code, returns atlassian access and refresh JWT tokens',
         tags=['auth'],
@@ -75,8 +75,8 @@ class ExchangeCodeToTokenView(APIView):
             return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
 
         tokens = {
-            'access': access_token,
             'refresh': refresh_token,
+            'access': access_token,
         }
         try:
             provider.save_provider_tokens(tokens, provider.data['expires_in'],
@@ -91,8 +91,8 @@ class RefreshAtlassianView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        request=RefreshAtlassianSerializer,
-        responses={201: OpenApiTypes.OBJECT},
+        request=RefreshInputSerializer,
+        responses={201: ProviderSerializer},
         summary='Refresh atlassian JWT token',
         description='Takes refresh JWT token, returns new access and refresh JWT tokens',
         tags=['auth'],
@@ -111,8 +111,8 @@ class RefreshAtlassianView(APIView):
             return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
 
         tokens = {
-            'access': access_token,
             'refresh': refresh_token,
+            'access': access_token,
         }
         try:
             provider.save_provider_tokens(tokens, provider.data['expires_in'],

@@ -1,10 +1,10 @@
-from .models import *
-from .serializers import *
 from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiTypes
 from django.contrib.auth import get_user_model
+
+from .serializers import *
 
 User = get_user_model()
 
@@ -15,7 +15,7 @@ class NewReviewFormView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        responses={200: 'ok', 403: 'forbidden'},
+        responses={200: TeammatesInfoSerializer, 403: ForbiddenErrorSerializer},
         tags=['review'],
         summary='Get logged users',
         description='Gives data about logged in employee and teammates'
@@ -32,18 +32,18 @@ class NewReviewFormView(APIView):
         return Response(context)
 
     @extend_schema(
-        request=FormSerializer,
-        responses={201: 'form saved successfully', 400: 'bad request', 403: 'forbidden'},
+        request=FormInputSerializer,
+        responses={201: OpenApiTypes.OBJECT, 400: BadRequestErrorSerializer, 403: ForbiddenErrorSerializer},
         tags=['review'],
         summary='Create new form',
         description='Takes params return new saved form'
     )
     def post(self, request):
-        serialiser = FormSerializer(data=request.data)
-        if not serialiser.is_valid():
-            return Response(serialiser.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = FormInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         try:
-            serialiser.save(created_by=request.user, about=User.objects.get(username=request.data['about']))
-            return Response(serialiser.data, status=status.HTTP_201_CREATED)
+            serializer.save(created_by=request.user, about=User.objects.get(username=request.data['about']))
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except User.DoesNotExist:
             return Response(f"user {request.data['about']} does not exist", status=status.HTTP_400_BAD_REQUEST)
