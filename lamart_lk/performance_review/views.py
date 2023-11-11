@@ -3,7 +3,7 @@ from .serializers import *
 from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -14,14 +14,13 @@ class NewReviewFormView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
+    @extend_schema(
         responses={200: 'ok', 403: 'forbidden'},
-        tags=['REVIEW'],
-        operation_id='Get logged users'
+        tags=['review'],
+        summary='Get logged users',
+        description='Gives data about logged in employee and teammates'
     )
     def get(self, request):
-        """Gives data about logged in employee and teammates"""
-
         teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
             'full_name': request.user.get_full_name(),
@@ -32,14 +31,14 @@ class NewReviewFormView(APIView):
         }
         return Response(context)
 
-    @swagger_auto_schema(
-        request_body=FormSerializer,  # query_serializer
+    @extend_schema(
+        request=FormSerializer,
         responses={201: 'form saved successfully', 400: 'bad request', 403: 'forbidden'},
-        tags=['REVIEW'],
-        operation_id='Create new form',
+        tags=['review'],
+        summary='Create new form',
+        description='Takes params return new saved form'
     )
     def post(self, request):
-        """Takes params return new saved form"""
         serialiser = FormSerializer(data=request.data)
         if not serialiser.is_valid():
             return Response(serialiser.errors, status=status.HTTP_400_BAD_REQUEST)
