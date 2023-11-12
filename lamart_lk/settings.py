@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 
     'authentication.apps.AuthenticationConfig',
     'performance_review.apps.PerformanceReviewConfig',
-    'user_profile.apps.UserProfileConfig'
+    'user_profile.apps.UserProfileConfig',
 ]
 
 SITE_ID = 1
@@ -123,7 +123,7 @@ DATABASES = {
     }
 }
 
-# добавить или изменить приложения можно ниже  
+# добавить или изменить приложения можно ниже
 # также это можно сделать через админ панель
 # https://django-allauth.readthedocs.io/en/latest/providers.html
 
