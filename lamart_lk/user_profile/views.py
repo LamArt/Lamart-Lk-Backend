@@ -1,11 +1,9 @@
 from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiTypes
-from django.contrib.auth import get_user_model
-
+from drf_yasg.utils import swagger_auto_schema
 from .serializers import *
-from performance_review.serializers import ForbiddenErrorSerializer, BadRequestErrorSerializer
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -13,13 +11,13 @@ User = get_user_model()
 class ProfileData(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    @extend_schema(
-        responses={200: ProfileDataSerializer, 403: ForbiddenErrorSerializer},
-        summary='Get profile',
-        description='Gives logged user profile data',
-        tags=['profile'],
+    @swagger_auto_schema(
+        responses={200: 'ok', 403: 'forbidden'},
+        operation_id='Get profile',
+        tags=['PROFILE'],
     )
     def get(self, request):
+        """Gives logged user profile data"""
         data = {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
@@ -34,16 +32,16 @@ class ProfileData(APIView):
         }
         return Response(data, status=status.HTTP_200_OK)
 
-    @extend_schema(
-        responses={201: OpenApiTypes.OBJECT, 400: BadRequestErrorSerializer, 403: ForbiddenErrorSerializer},
-        request=ProfileInputSerializer,
-        summary='Update profile',
-        description='Takes new data returns updated profile data',
-        tags=['profile'],
+    @swagger_auto_schema(
+        responses={201: 'created', 400: 'bad request', 403: 'forbidden'},
+        query_serializer=ProfileSerializer,
+        operation_id='Update profile',
+        tags=['PROFILE'],
     )
     def put(self, request):
-        serializer = ProfileInputSerializer(request.user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        """Takes new data returns updated profile data"""
+        serialiser = ProfileSerializer(request.user, data=request.data)
+        if serialiser.is_valid():
+            serialiser.save()
             return Response(status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serialiser.errors, status=status.HTTP_400_BAD_REQUEST)
