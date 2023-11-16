@@ -1,5 +1,7 @@
 import requests
+
 from salary.models import Salary
+
 
 class JiraStoryPoints:
     ACCESSIBLE_RESOURCES = 'https://api.atlassian.com/oauth/token/accessible-resources'
@@ -34,10 +36,13 @@ class JiraStoryPoints:
 
     def count_story_points(self):
         """Counter sp of ALL projects with open sprints"""
-        projects = ' OR '.join([f'project={project}' for project in self.get_projects()])
+        projects = self.get_projects()
+        if not projects:
+            return 0
+        query_of_projects = ' OR '.join([f'project={project}' for project in projects])
         start_date = Salary.objects.get(user=self.user).last_salary_date
         email = self.get_user_email()
-        jql_query = f'sprint in openSprints() AND ({projects}) AND updated>={start_date} AND assignee="{email}"'
+        jql_query = f'sprint in openSprints() AND ({query_of_projects}) AND updated>={start_date} AND assignee="{email}"'
         params = {
             'jql': jql_query,
             'fields': 'customfield_10016',
@@ -58,7 +63,9 @@ class JiraStoryPoints:
         else:
             return 0
 
-    def count_salary(self):
-        user_rate = Salary.objects.get(user=self.user).rate
-        return user_rate
-
+    def get_user_salary_info(self):
+        try:
+            user_info = Salary.objects.get(user=self.user)
+            return user_info
+        except Salary.DoesNotExist:
+            return None
