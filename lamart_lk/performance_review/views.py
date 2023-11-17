@@ -28,8 +28,7 @@ class NewReviewFormView(APIView):
             'is_team_lead': request.user.is_team_lead,
             'gender': request.user.gender,
             'team': request.user.team,
-            'teammates': list(teammates.values('username', 'first_name', 'last_name', 'gender', 'status_level')),
-        }
+            'teammates': list(teammates.values('username', 'first_name', 'last_name', 'gender', 'status_level')),        }
         return Response(context)
 
     @swagger_auto_schema(

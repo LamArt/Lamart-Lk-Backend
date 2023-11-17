@@ -4,15 +4,20 @@ from .models import ProviderToken
 from rest_framework import serializers
 
 
-class ProviderSerialiser(ModelSerializer):
+class ProviderInputSerializer(ModelSerializer):
     class Meta:
         model = ProviderToken
         fields = ['access_token', 'organisation', 'provider']
 
 
-class ExchangeCodeSerializer(serializers.Serializer):
+class ProviderSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField(required=True, help_text="Refresh JWT token")
+    access_token = serializers.CharField(required=True, help_text="Access JWT token")
+
+
+class ExchangeCodeInputSerializer(serializers.Serializer):
     authorization_code = serializers.CharField(required=True, help_text="Atlassian authorization code")
 
 
-class RefreshAtlassianSerializer(serializers.Serializer):
+class RefreshInputSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(required=True, help_text="Atlassian refresh token")

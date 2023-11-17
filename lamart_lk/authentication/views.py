@@ -1,32 +1,20 @@
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
 from .providers import YandexProvider, AtlassianProvider
-from .serialisers import ProviderSerialiser, ExchangeCodeSerializer, RefreshAtlassianSerializer
+from .serialisers import ProviderInputSerializer, ProviderSerializer, ExchangeCodeInputSerializer, RefreshInputSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from drf_yasg import openapi
-
-openapi_response_samples = {
-    "201": openapi.Response(
-        description="success",
-        examples={
-            "application/json": {
-                "refresh": "string",
-                "access": "string",
-            }
-        }
-    )
-}
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
 
 
 class ExchangeProviderTokenView(APIView):
-    @swagger_auto_schema(
-        request_body=ProviderSerialiser,
-        responses=openapi_response_samples,
-        operation_id='Create JWT provider token',
-        tags=['AUTH'],
-        security=[None]
+    @extend_schema(
+        request=ProviderInputSerializer,
+        responses={201: ProviderSerializer},
+        summary='Create JWT provider token',
+        description='Takes provider JWT token, organisation returns access and refresh JWT tokens',
+        tags=['auth'],
     )
     def post(self, request):
         try:
@@ -66,11 +54,12 @@ class ExchangeProviderTokenView(APIView):
 class ExchangeCodeToTokenView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
-        request_body=ExchangeCodeSerializer,
-        responses=openapi_response_samples,
-        operation_id='Exchange authorization code to atlassian access and refresh token',
-        tags=['AUTH'],
+    @extend_schema(
+        request=ExchangeCodeInputSerializer,
+        responses={201: ProviderSerializer},
+        summary='Exchange code to atlassian JWT token',
+        description='Takes authorization code, returns atlassian access and refresh JWT tokens',
+        tags=['auth'],
     )
     def post(self, request):
         try:
@@ -86,8 +75,8 @@ class ExchangeCodeToTokenView(APIView):
             return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
 
         tokens = {
-            'access': access_token,
             'refresh': refresh_token,
+            'access': access_token,
         }
         try:
             provider.save_provider_tokens(tokens, provider.data['expires_in'],
@@ -101,11 +90,12 @@ class ExchangeCodeToTokenView(APIView):
 class RefreshAtlassianView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
-        request_body=RefreshAtlassianSerializer,
-        responses=openapi_response_samples,
-        operation_id='Refresh to new refresh and access jira',
-        tags=['AUTH'],
+    @extend_schema(
+        request=RefreshInputSerializer,
+        responses={201: ProviderSerializer},
+        summary='Refresh atlassian JWT token',
+        description='Takes refresh JWT token, returns new access and refresh JWT tokens',
+        tags=['auth'],
     )
     def post(self, request):
         try:
@@ -121,8 +111,8 @@ class RefreshAtlassianView(APIView):
             return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
 
         tokens = {
-            'access': access_token,
             'refresh': refresh_token,
+            'access': access_token,
         }
         try:
             provider.save_provider_tokens(tokens, provider.data['expires_in'],
