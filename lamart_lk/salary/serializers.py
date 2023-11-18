@@ -1,6 +1,8 @@
 from rest_framework import serializers
+from salary.models import Salary
 
 
-class SalarySerializer(serializers.Serializer):
-    story_points = serializers.IntegerField()
-    salary = serializers.IntegerField()
+class SalarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Salary
+        fields = '__all__'
