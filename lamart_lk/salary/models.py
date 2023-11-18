@@ -11,3 +11,11 @@ class Salary(models.Model):
 
     def __str__(self):
         return f'{self.user}'
+
+    @classmethod
+    def get_salary_data(cls, user_instance):
+        try:
+            user_data = cls.objects.get(user=user_instance)
+            return user_data
+        except cls.DoesNotExist:
+            return None
