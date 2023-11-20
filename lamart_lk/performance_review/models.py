@@ -4,9 +4,9 @@ from django.db import models
 
 class TeamLeadFeedbackForm(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
-                                   related_name='created_forms', blank=False)
+                                   related_name='created_teamlead_forms', blank=False)
     about = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
-                                 related_name='forms_about',
+                                 related_name='teamlead_forms_about',
                                  blank=False)
     feedback_date = models.DateField(null=True, blank=True)
 
@@ -22,18 +22,19 @@ class TeamLeadFeedbackForm(models.Model):
     teamwork_rate = models.IntegerField(null=True)
     stress_resistance_rate = models.IntegerField(null=True)
 
+    manager_approve = models.BooleanField(default=False)
+
 
 class EmployeeFeedbackForm(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
-                                   related_name='created_forms', blank=False)
+                                   related_name='created_employee_forms', blank=False)
     about = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
-                                  related_name='forms_about',
+                                  related_name='employee_forms_about',
                                   blank=False)
-    team = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="team", blank=False)
+    team = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_team", blank=False)
 
     feedback_date = models.DateField(null=True, blank=True)
 
-    # self review
     achievements = models.TextField(null=True, blank=True)
     ways_to_achieve = models.TextField(null=True, blank=True)
 
