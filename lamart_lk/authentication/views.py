@@ -32,8 +32,10 @@ class ExchangeProviderTokenView(APIView):
         except KeyError:
             return Response(f"organisation {request.data['organisation']} is not supported")
         except ValueError:
+            # organisation checking is disabled during DEBUG
             return Response(
-                f"organisation {request.data['organisation']} don't have @{provider.data['default_email'].split('@')[1]} domain")
+                f"organisation {request.data['organisation']} don't have @{provider.data['default_email'].split('@')[1]} domain",
+                status=status.HTTP_403_FORBIDDEN)
 
         refresh = RefreshToken.for_user(provider.get_user())
         tokens = {
