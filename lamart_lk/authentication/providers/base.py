@@ -2,6 +2,7 @@ import requests
 from abc import ABC, abstractmethod
 from django.contrib.auth import get_user_model
 from authentication.models import ProviderToken
+from lamart_lk.settings import DEBUG
 
 User = get_user_model()
 
@@ -14,7 +15,7 @@ PROVIDERS = {
             'value': 'OAuth'
         },
         'organisations': {
-            'lamart': 'yandex',
+            'lamart': '.site',
         }
     },
     'atlassian': {
@@ -86,6 +87,8 @@ class YandexProvider(Provider):
 
     def check_organisation(self, organisation):
         email_domain = self.provider['organisations'][organisation]
+        if DEBUG:
+            return
         if email_domain not in self.data['default_email']:
             raise ValueError('wrong email')
 
