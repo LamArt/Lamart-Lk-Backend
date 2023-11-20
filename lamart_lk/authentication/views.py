@@ -1,11 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
-from .providers import YandexProvider, AtlassianProvider
+from authentication.providers.base import YandexProvider, AtlassianProvider
 from .serialisers import ProviderInputSerializer, ProviderSerializer, ExchangeCodeInputSerializer, RefreshInputSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
-from drf_spectacular.types import OpenApiTypes
 
 
 class ExchangeProviderTokenView(APIView):
@@ -108,7 +107,7 @@ class RefreshAtlassianView(APIView):
             access_token = provider.data['access_token']
             refresh_token = provider.data['refresh_token']
         except KeyError:
-            return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
+            return Response('not valid refresh token', status=status.HTTP_400_BAD_REQUEST)
 
         tokens = {
             'refresh': refresh_token,

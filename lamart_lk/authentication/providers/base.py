@@ -1,7 +1,7 @@
 import requests
 from abc import ABC, abstractmethod
 from django.contrib.auth import get_user_model
-from .models import ProviderToken
+from authentication.models import ProviderToken
 
 User = get_user_model()
 
