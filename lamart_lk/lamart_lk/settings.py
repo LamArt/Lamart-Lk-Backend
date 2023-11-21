@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'authentication.apps.AuthenticationConfig',
     'performance_review.apps.PerformanceReviewConfig',
     'user_profile.apps.UserProfileConfig',
-    'salary.apps.SalaryConfig'
+    'salary.apps.SalaryConfig',
+    'planning.apps.PlanningConfig'
 ]
 
 SITE_ID = 1

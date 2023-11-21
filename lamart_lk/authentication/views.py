@@ -7,6 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
 
 
+
 class ExchangeProviderTokenView(APIView):
     @extend_schema(
         request=ProviderInputSerializer,
@@ -22,8 +23,7 @@ class ExchangeProviderTokenView(APIView):
             return Response('provider does not exist', status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            provider_token = request.data['access_token']
-            provider.get_data(provider_token)
+            provider.get_data(request.data['access_token'])
         except KeyError:
             return Response('token is not valid', status=status.HTTP_400_BAD_REQUEST)
 
@@ -42,12 +42,16 @@ class ExchangeProviderTokenView(APIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
-        user = provider.get_user()
         try:
-            provider.save_provider_tokens(tokens, 5, user, request.data['provider'],
+            refresh_token = request.data['refresh_token']
+        except KeyError:
+            refresh_token = None
+        try:
+            provider.save_provider_tokens({'access': request.data['access_token'], 'refresh': refresh_token},
+                                          request.data['expires_in'], provider.get_user(), request.data['provider'],
                                           request.data['organisation'])
         except KeyError:
-            raise 'user tokens not be saved'
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(tokens, status=status.HTTP_201_CREATED)
 
@@ -121,3 +125,4 @@ class RefreshAtlassianView(APIView):
         except KeyError:
             raise 'user tokens not be saved'
         return Response(tokens, status=status.HTTP_201_CREATED)
+
