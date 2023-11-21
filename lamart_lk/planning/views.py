@@ -13,7 +13,7 @@ class GetYandexUnreadMailCountView(APIView):
     )
     def get(self, request):
         username = request.user.email
-        access_token = 'y0_AgAAAAAVPIqwAApXyAAAAADwQqCEVoyRNLefRWiCm-LufnvJDUPvY7I'
+        access_token = request.user.provider_tokens.get(provider='yandex').access_token
         auth_string = 'user=%s\1auth=Bearer %s\1\1' % (username, access_token)
         imap_connector = IMAP4_SSL('imap.yandex.com', 993)
         try:
