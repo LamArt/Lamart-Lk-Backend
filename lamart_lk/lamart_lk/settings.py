@@ -16,7 +16,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -27,7 +26,6 @@ SECRET_KEY = 'django-insecure-yh*e5c48&vkqg3j+unrpthk0o_8gmn+h2vniwm316==zsx0rmd
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -40,13 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
 
-    'drf_yasg',
+    'drf_spectacular',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
 
     'authentication.apps.AuthenticationConfig',
     'performance_review.apps.PerformanceReviewConfig',
-    'user_profile.apps.UserProfileConfig'
+    'user_profile.apps.UserProfileConfig',
+    'salary.apps.SalaryConfig',
+    'planning.apps.PlanningConfig'
 ]
 
 SITE_ID = 1
@@ -59,7 +60,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5001",
+    "http://localhost:5002",
+    "http://localhost:5003",
+    "http://localhost:5004",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'lamart_lk.urls'
 
@@ -88,19 +99,32 @@ AUTHENTICATION_BACKENDS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 SIMPLE_JWT = {
-  "REFRESH_TOKEN_LIFETIME": timedelta(days=0.5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=0.5),
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'lamart lk API',
+    'DESCRIPTION': 'This is API for lamart performance review and lk platform',
+    'VERSION': 'v1',
+    'TERMS_OF_SERVICE': 'https://www.google.com/policies/terms/',
+    'CONTACT': {'email': 'ih@lamart.site'},
+    'LICENSE': {'name': 'BSD License'},
+    'PUBLIC': True,
+}
+
 SWAGGER_SETTINGS = {
-   'SECURITY_DEFINITIONS': {
-      'Bearer': {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
             'type': 'apiKey',
             'name': 'Authorization',
             'in': 'header'
-      }
-   }
+        }
+    },
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # Database
@@ -111,24 +135,24 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-} 
+}
 
-# добавить или изменить приложения можно ниже  
+# добавить или изменить приложения можно ниже
 # также это можно сделать через админ панель
 # https://django-allauth.readthedocs.io/en/latest/providers.html
 
 SOCIALACCOUNT_PROVIDERS = {
     'yandex': {
         'APP': {
-            'client_id': 'c120ba35adaf4278a8277e542b1a0cbd', # тестовое приложение
-            'secret': '4f47e8d1537948c79f0214f039d4387c', # тестовое приложение 
+            'client_id': 'c120ba35adaf4278a8277e542b1a0cbd',  # тестовое приложение
+            'secret': '4f47e8d1537948c79f0214f039d4387c',  # тестовое приложение
             'key': ''
         }
     },
 }
 
-AUTH_USER_MODEL = "authentication.User" # кастомная пользовательская модель
-#SOCIALACCOUNT_AUTO_SIGNUP = True
+AUTH_USER_MODEL = "authentication.User"  # кастомная пользовательская модель
+# SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -148,7 +172,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -159,7 +182,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

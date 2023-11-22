@@ -20,7 +20,7 @@ class TeammatesAPIView(APIView):
         responses={200: 'ok', 403: 'forbidden'},
     )
     def get(self, request):
-        """Gives data about loged in employee and teammates"""
+        """Gives data about logged in employee and teammates"""
 
         teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
