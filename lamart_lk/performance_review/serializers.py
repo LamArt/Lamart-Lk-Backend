@@ -1,14 +1,9 @@
 from rest_framework import serializers
-from .models import *
+from .models import Form
 
 
-class EmployeeFormSerializer(serializers.ModelSerializer):
+class FormSerializer(serializers.ModelSerializer):
     class Meta:
-        model = EmployeeFeedbackForm
-        exclude = ['created_by', 'feedback_date']
+        model = Form
+        exclude = ['created_by', 'about', 'feedback_date']
 
-
-class TeamleadFormSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TeamLeadFeedbackForm
-        exclude = ['created_by', 'feedback_date']
