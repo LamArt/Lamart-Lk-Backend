@@ -41,11 +41,13 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
 
     'authentication.apps.AuthenticationConfig',
     'performance_review.apps.PerformanceReviewConfig',
     'user_profile.apps.UserProfileConfig',
-    'salary.apps.SalaryConfig'
+    'salary.apps.SalaryConfig',
+    'planning.apps.PlanningConfig'
 ]
 
 SITE_ID = 1
@@ -58,7 +60,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5001",
+    "http://localhost:5002",
+    "http://localhost:5003",
+    "http://localhost:5004",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'lamart_lk.urls'
 
@@ -111,7 +123,8 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization',
             'in': 'header'
         }
-    }
+    },
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # Database
@@ -124,7 +137,7 @@ DATABASES = {
     }
 }
 
-# добавить или изменить приложения можно ниже  
+# добавить или изменить приложения можно ниже
 # также это можно сделать через админ панель
 # https://django-allauth.readthedocs.io/en/latest/providers.html
 

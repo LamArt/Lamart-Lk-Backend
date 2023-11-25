@@ -7,7 +7,7 @@ from rest_framework import serializers
 class ProviderInputSerializer(ModelSerializer):
     class Meta:
         model = ProviderToken
-        fields = ['access_token', 'organisation', 'provider']
+        exclude = ['user']
 
 
 class ProviderSerializer(serializers.Serializer):
