@@ -1,19 +1,20 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import serializers
 from rest_framework import status, permissions
 from authentication.providers.base import YandexProvider, AtlassianProvider
-from .serialisers import ProviderInputSerializer, ProviderSerializer, ExchangeCodeInputSerializer, RefreshInputSerializer
+from .serialisers import TokensSerializer, ProviderSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from drf_spectacular.utils import extend_schema
-
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 
 class ExchangeProviderTokenView(APIView):
+    serializer_class = ProviderSerializer
+
     @extend_schema(
-        request=ProviderInputSerializer,
-        responses={201: ProviderSerializer},
-        summary='Create JWT provider token',
-        description='Takes provider JWT token, organisation returns access and refresh JWT tokens',
+        responses=TokensSerializer,
+        summary='Create JWT provider',
+        description='Takes provider JWT, organisation returns access and refresh JWT',
         tags=['auth'],
     )
     def post(self, request):
@@ -42,10 +43,12 @@ class ExchangeProviderTokenView(APIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
         try:
-            refresh_token = request.data['refresh_token']
+            refresh_token = tokens['refresh_token']
         except KeyError:
             refresh_token = None
+
         try:
             provider.save_provider_tokens({'access': request.data['access_token'], 'refresh': refresh_token},
                                           request.data['expires_in'], provider.get_user(), request.data['provider'],
@@ -58,12 +61,13 @@ class ExchangeProviderTokenView(APIView):
 
 class ExchangeCodeToTokenView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = inline_serializer(name='CodeExchangeSerializer',
+                                         fields={'authorization_code': serializers.CharField()})
 
     @extend_schema(
-        request=ExchangeCodeInputSerializer,
-        responses={201: ProviderSerializer},
-        summary='Exchange code to atlassian JWT token',
-        description='Takes authorization code, returns atlassian access and refresh JWT tokens',
+        responses=TokensSerializer,
+        summary='Exchange code to atlassian JWT',
+        description='Takes authorization code, returns atlassian access and refresh JWT',
         tags=['auth'],
     )
     def post(self, request):
@@ -87,19 +91,20 @@ class ExchangeCodeToTokenView(APIView):
             provider.save_provider_tokens(tokens, provider.data['expires_in'],
                                           request.user, 'atlassian', 'lamart')
         except KeyError:
-            raise 'user tokens not be saved'
+            return Response('user tokens not be saved', status=status.HTTP_400_BAD_REQUEST)
 
         return Response(tokens, status=status.HTTP_201_CREATED)
 
 
 class RefreshAtlassianView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = inline_serializer(name='AltassianRefreshSerializer',
+                                         fields={'refresh_token': serializers.CharField()})
 
     @extend_schema(
-        request=RefreshInputSerializer,
-        responses={201: ProviderSerializer},
-        summary='Refresh atlassian JWT token',
-        description='Takes refresh JWT token, returns new access and refresh JWT tokens',
+        responses={201: TokensSerializer},
+        summary='Refresh atlassian JWT',
+        description='Takes refresh JWT, returns new access and refresh JWT',
         tags=['auth'],
     )
     def post(self, request):
@@ -123,6 +128,6 @@ class RefreshAtlassianView(APIView):
             provider.save_provider_tokens(tokens, provider.data['expires_in'],
                                           request.user, 'atlassian', 'lamart')
         except KeyError:
-            raise 'user tokens not be saved'
-        return Response(tokens, status=status.HTTP_201_CREATED)
+            return Response('user tokens not be saved', status=status.HTTP_400_BAD_REQUEST)
 
+        return Response(tokens, status=status.HTTP_201_CREATED)

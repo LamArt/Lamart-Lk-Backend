@@ -27,7 +27,7 @@ PROVIDERS = {
         'data_params': {
             'client_id': 'OFe6NSNJiBJypHiGeEMinCsohVPFfXAV',
             'client_secret': 'ATOAfeVYlgQVJPi7CNSkvAtPLvymr6Uyw4foeBjC1-iZorQUFDn7TvO6r_58KArFSn4h4EE5A385',
-            'redirect_uri': 'https://localhost/callback'
+            'redirect_uri': 'http://localhost:5004'
         }
     }
 }
