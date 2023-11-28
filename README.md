@@ -8,7 +8,6 @@ create virtual environment from requirements.txt
 
 powershell:
 `cd lamart_lk`
-`python manage.py makemigrations`
 `python manage.py migrate`
 `python manage.py createsuperuser`
 `python manage.py runserver`
