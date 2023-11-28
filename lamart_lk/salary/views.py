@@ -1,3 +1,5 @@
+import asyncio
+
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,7 +8,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiRespo
 
 from authentication.models import ProviderToken
 from salary.serializers import SalarySerializer
-from authentication.providers.atlassian import AtlassianProvider
+from salary.story_points.utils import StoryPoints
 from salary.models import Salary
 
 
@@ -31,7 +33,7 @@ class SalaryView(APIView):
     def get(self, request):
         try:
             atlassian_token = ProviderToken.objects.get(user=request.user, provider='atlassian').access_token
-            atlassian_provider = AtlassianProvider(atlassian_token, request.user)
+            atlassian_provider = StoryPoints(atlassian_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
 
@@ -39,7 +41,12 @@ class SalaryView(APIView):
         if user_salary is None:
             return Response('User salary information not found', status=status.HTTP_404_NOT_FOUND)
 
-        story_points = atlassian_provider.count_story_points(user_salary.last_salary_date)
+        story_points = atlassian_provider.count_story_points_at_moment(user_salary.last_salary_date)
+        if story_points == 0:
+            return Response('No story points found in Jira for this period', status=status.HTTP_404_NOT_FOUND)
+        if story_points < 0:
+            return Response('Refresh Jira token', status=status.HTTP_400_BAD_REQUEST)
+
         rate = user_salary.rate
         result = {
             'story_points': story_points,
@@ -73,3 +80,31 @@ class SalaryView(APIView):
             serializer.save()
             return Response('Updated successfully', status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AnalyticsStoryPointsView(APIView):
+    permissions = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        responses={200: 'ok'},
+        summary='Get story points data for graph',
+        description='Return story points for a week and a month',
+        tags=['salary'],
+    )
+    def get(self, request):
+        try:
+            atlassian_token = ProviderToken.objects.get(user=request.user, provider='atlassian').access_token
+            atlassian_provider = StoryPoints(atlassian_token, request.user)
+        except ProviderToken.DoesNotExist:
+            return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
+
+        sp_weeks = atlassian_provider.count_story_points_by_period('w')
+        sp_months = atlassian_provider.count_story_points_by_period('m')
+        if sp_weeks is None or sp_months is None:
+            return Response('Refresh Jira token', status=status.HTTP_400_BAD_REQUEST)
+
+        result = {
+            'weeks': sp_weeks,
+            'months': sp_months
+        }
+        return Response(result, status=status.HTTP_200_OK)
