@@ -34,7 +34,7 @@ To connect Jira as provider you need:
 1) Create a new app in [Developer Console](https://developer.atlassian.com/console/myapps/)
 2) Add all permissions with Jira API like read and etc, but no more 50 scopes.
 3) Open "Authorization" in left menu, configure OAuth 2.0
-4) You need to take URL from "User identity API authorization URL"
-5) Add in your URL new param "offline_access" to the scope parameter, it will be looks like: 'Aaccount%20offline_access&redirect_uri='. You can past it to the right place, all the difference is in the offline access parameter.
+4) You need to take URL from "Classic Jira platform REST API authorization URL"
+5) Add in your URL new param "offline_access" to the scope parameter, it will be looks like: '%3Ajira-data-provider%20offline_access&redirect_uri'. You can past it to the right place, all the difference is in the offline access parameter.
 6) After accepting all accesses "code=" param is what you need.
 7) Exchange your authorization code to JWT token by auth/exchange_token/
