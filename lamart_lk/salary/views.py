@@ -1,5 +1,3 @@
-import asyncio
-
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -86,7 +84,13 @@ class AnalyticsStoryPointsView(APIView):
     permissions = [permissions.IsAuthenticated]
 
     @extend_schema(
-        responses={200: 'ok'},
+        responses={200: inline_serializer(
+            name='SuccessfulGetAnalytics',
+            fields={
+                'weeks': serializers.DictField(),
+                'months': serializers.DictField(),
+            }
+        )},
         summary='Get story points data for graph',
         description='Return story points for a week and a month',
         tags=['salary'],
@@ -100,8 +104,10 @@ class AnalyticsStoryPointsView(APIView):
 
         sp_weeks = atlassian_provider.count_story_points_by_period('w')
         sp_months = atlassian_provider.count_story_points_by_period('m')
-        if sp_weeks is None or sp_months is None:
+        if sp_weeks is None:
             return Response('Refresh Jira token', status=status.HTTP_400_BAD_REQUEST)
+        if not sp_weeks:
+            return Response('No story points found in Jira for this period', status=status.HTTP_404_NOT_FOUND)
 
         result = {
             'weeks': sp_weeks,
