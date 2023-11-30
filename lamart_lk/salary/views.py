@@ -34,17 +34,17 @@ class SalaryView(APIView):
             atlassian_provider = StoryPoints(atlassian_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
-
+        except IndexError:
+            return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
+                            status=status.HTTP_400_BAD_REQUEST)
         user_salary = Salary.get_salary_data(request.user)
         if user_salary is None:
             return Response('User salary information not found', status=status.HTTP_404_NOT_FOUND)
-
         story_points = atlassian_provider.count_story_points_at_moment(user_salary.last_salary_date)
         if story_points == 0:
             return Response('No story points found in Jira for this period', status=status.HTTP_404_NOT_FOUND)
         if story_points < 0:
             return Response('Refresh Jira token', status=status.HTTP_400_BAD_REQUEST)
-
         rate = user_salary.rate
         result = {
             'story_points': story_points,
