@@ -20,6 +20,7 @@ class SalaryView(APIView):
             fields={
                 'story_points': serializers.IntegerField(),
                 'salary': serializers.IntegerField(),
+                'rate': serializers.IntegerField(),
                 'credit': serializers.IntegerField(),
                 'reward': serializers.IntegerField(),
             }
@@ -49,6 +50,7 @@ class SalaryView(APIView):
         result = {
             'story_points': story_points,
             'salary': rate * story_points,
+            'rate': rate,
             'credit': user_salary.credit,
             'reward': user_salary.reward
         }
