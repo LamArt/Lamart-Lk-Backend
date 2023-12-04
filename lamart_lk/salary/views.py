@@ -6,7 +6,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiRespo
 
 from authentication.models import ProviderToken
 from salary.serializers import SalarySerializer
-from authentication.providers.atlassian import AtlassianProvider
+from salary.story_points.utils import StoryPoints
 from salary.models import Salary
 
 
@@ -20,6 +20,7 @@ class SalaryView(APIView):
             fields={
                 'story_points': serializers.IntegerField(),
                 'salary': serializers.IntegerField(),
+                'rate': serializers.IntegerField(),
                 'credit': serializers.IntegerField(),
                 'reward': serializers.IntegerField(),
             }
@@ -31,19 +32,22 @@ class SalaryView(APIView):
     def get(self, request):
         try:
             atlassian_token = ProviderToken.objects.get(user=request.user, provider='atlassian').access_token
-            atlassian_provider = AtlassianProvider(atlassian_token, request.user)
+            atlassian_provider = StoryPoints(atlassian_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
+        except IndexError:
+            return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
+                            status=status.HTTP_400_BAD_REQUEST)
 
         user_salary = Salary.get_salary_data(request.user)
         if user_salary is None:
             return Response('User salary information not found', status=status.HTTP_404_NOT_FOUND)
-
-        story_points = atlassian_provider.count_story_points(user_salary.last_salary_date)
+        story_points = atlassian_provider.count_story_points_at_moment(user_salary.last_salary_date)
         rate = user_salary.rate
         result = {
             'story_points': story_points,
             'salary': rate * story_points,
+            'rate': rate,
             'credit': user_salary.credit,
             'reward': user_salary.reward
         }
@@ -73,3 +77,35 @@ class SalaryView(APIView):
             serializer.save()
             return Response('Updated successfully', status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StatisticsStoryPointsView(APIView):
+    permissions = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        responses={200: inline_serializer(
+            name='SuccessfulGetStatistics',
+            fields={
+                'weeks': serializers.DictField(),
+                'months': serializers.DictField(),
+            }
+        )},
+        summary='Get story points data for graph',
+        description='Return story points for a week and a month',
+        tags=['salary'],
+    )
+    def get(self, request):
+        try:
+            atlassian_token = ProviderToken.objects.get(user=request.user, provider='atlassian').access_token
+            atlassian_provider = StoryPoints(atlassian_token, request.user)
+        except ProviderToken.DoesNotExist:
+            return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
+
+        sp_weeks = atlassian_provider.count_story_points_by_period('w')
+        sp_months = atlassian_provider.count_story_points_by_period('m')
+
+        result = {
+            'weeks': sp_weeks,
+            'months': sp_months
+        }
+        return Response(result, status=status.HTTP_200_OK)
