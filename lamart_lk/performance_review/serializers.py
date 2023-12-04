@@ -11,5 +11,5 @@ class EmployeeFormSerializer(serializers.ModelSerializer):
 class TeamleadFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamLeadFeedbackForm
-        exclude = ['created_by', 'feedback_date']
+        exclude = ['created_by', 'feedback_date', 'manager_approve']
 
