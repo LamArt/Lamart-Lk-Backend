@@ -2,15 +2,15 @@ from collections import defaultdict
 import requests
 from datetime import datetime, timedelta
 
-from authentication.providers.atlassian import AtlassianProvider
+from authentication.providers.atlassian import AtlassianApiProvider
 
 
-class StoryPoints(AtlassianProvider):
+class StoryPoints(AtlassianApiProvider):
     current_date = datetime.now()
 
     def take_tasks(self, created_type, sprints=''):
         """Make request to jira api with JQL, return data of projects"""
-        
+
         if not self.projects:
             return None
         query_of_projects = ' OR '.join([f'project={project}' for project in self.projects])
