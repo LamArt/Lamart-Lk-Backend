@@ -1,14 +1,30 @@
+import datetime
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
 from drf_spectacular.utils import extend_schema
 from imaplib import IMAP4, IMAP4_SSL
+from caldav import DAVClient, Principal
+from caldav.lib.error import NotFoundError
+from .serializers import EventDataSerializer, MailCountSerializer
+
+
+def get_caldav_principal(request_body) -> Principal:
+    username = request_body.user.email
+    url = f'https://caldav.yandex.ru/calendars/{username}/'
+    access_token = request_body.user.provider_tokens.get(provider='yandex').access_token
+
+    client = DAVClient(url=url, username=username, password=access_token)
+    principal = client.principal()
+    return principal
+
 
 class GetYandexUnreadMailCountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     @extend_schema(
-    summary='Get yandex unread mails',
-    description='...',
+    summary='Get mail count',
+    responses=MailCountSerializer,
+    description='Returns yandex unread mails count',
     tags=['planning'],
     )
     def get(self, request):
@@ -28,3 +44,46 @@ class GetYandexUnreadMailCountView(APIView):
         imap_connector.logout()
         response = {'count': mail_count}
         return Response(response, status=status.HTTP_200_OK)
+
+
+class GetYandexCalendarEventsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    @extend_schema(
+    summary='Get today\'s events',
+    responses=EventDataSerializer,
+    description='Returns yandex today\'s calendar events',
+    tags=['planning'],
+    )
+    def get(self, request):
+        principal = get_caldav_principal(request)
+
+        try:
+            calendars = principal.calendars()
+        except NotFoundError:
+            return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
+        response = {}
+        date = str(datetime.date.today())
+        for calendar in calendars:
+            for raw_event in calendar.events():
+                event_info = {}
+                event = raw_event.vobject_instance.vevent
+
+                if date not in str(event.dtstart.value):
+                     continue
+                event_info['title'] = str(event.summary.value)
+                try:
+                    description = " ".join(str(event.description.value).replace('\n', ' ').split())
+                    event_info['description'] = description
+                except AttributeError:
+                    event_info['description'] = None
+                event_info['start_time'] = str(event.dtstart.value)
+                event_info['end_time'] = str(event.dtend.value)
+                event_info['url'] = str(event.url.value)
+
+                response[str(event.uid.value)] = event_info
+
+        return Response(response, status=status.HTTP_200_OK)\
+            if len(response) > 0\
+            else Response(status=status.HTTP_204_NO_CONTENT)
+
+
