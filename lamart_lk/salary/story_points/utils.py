@@ -2,15 +2,15 @@ from collections import defaultdict
 import requests
 from datetime import datetime, timedelta
 
-from authentication.providers.atlassian import AtlassianProvider
+from authentication.providers.atlassian import AtlassianApiProvider
 
 
-class StoryPoints(AtlassianProvider):
+class StoryPoints(AtlassianApiProvider):
     current_date = datetime.now()
 
     def take_tasks(self, created_type, sprints=''):
         """Make request to jira api with JQL, return data of projects"""
-        
+
         if not self.projects:
             return None
         query_of_projects = ' OR '.join([f'project={project}' for project in self.projects])
@@ -26,10 +26,10 @@ class StoryPoints(AtlassianProvider):
             response_data = rq.json()
             return response_data
 
-    def count_story_points_at_moment(self, last_salary_date):
-        """Counter sp of ALL projects with open sprints after last_salary_date"""
+    def count_story_points_at_moment(self):
+        """Counter sp of ALL projects with open sprints for current month"""
 
-        issue_data = self.take_tasks(last_salary_date, 'sprint in openSprints() AND')
+        issue_data = self.take_tasks('startOfMonth()', 'sprint in openSprints() AND')
         if issue_data is None:
             return 0
         total = 0
@@ -40,36 +40,25 @@ class StoryPoints(AtlassianProvider):
 
         return total
 
-    def count_story_points_by_period(self, period='w'):
-        """Count sp by months or weeks"""
+    def count_story_points_by_months(self):
+        """Counter sp for the last 10 months"""
 
-        time_delta = 10 if period == 'w' else 10 * 4
-        if period == 'm':
-            issue_data = self.take_tasks('startOfMonth(-10M)')
-        else:
-            issue_data = self.take_tasks('startOfWeek(-10w)')
+        time_delta = 10 * 4
+        issue_data = self.take_tasks('startOfMonth(-10M)')
         time_data = defaultdict(int)
         if issue_data is None:
-            return 0
+            return {}
         for issue in issue_data.get('issues', []):
             issue_date = datetime.strptime(issue['fields']['created'][:-6], "%Y-%m-%dT%H:%M:%S.%f")
 
             for i in range(time_delta):
-                if period == 'w':
-                    start_time = (self.current_date - timedelta(days=self.current_date.weekday()) -
-                                  timedelta(weeks=i)).replace(hour=0, minute=0, second=0, microsecond=0)
-                    end_time = start_time + timedelta(days=6, hours=23, minutes=59, seconds=59)
-                else:
-                    start_time = ((self.current_date - timedelta(days=self.current_date.day - 1)).replace(day=1) -
-                                  timedelta(weeks=i * 4))
-                    end_time = start_time.replace(day=1) + timedelta(days=32, hours=23, minutes=59, seconds=59)
+                start_time = self.current_date.replace(day=1) - timedelta(weeks=i * 4)
+                end_time = (start_time.replace(day=1) +
+                            timedelta(days=32)).replace(day=1, hour=0, minute=0, second=0) - timedelta(seconds=1)
 
                 if start_time <= issue_date <= end_time:
-                    if period == 'w':
-                        time_name = f"{start_time.strftime('%d.%m.%Y')} - {end_time.strftime('%d.%m.%Y')}"
-                    else:
-                        time_name = start_time.strftime('%B')
+                    time_name = start_time.strftime('%B')
                     time_data[time_name] += issue['fields']['customfield_10016']
 
-        result = {time_name: value for time_name, value in time_data.items()}
+        result = dict(sorted(time_data.items()))
         return result

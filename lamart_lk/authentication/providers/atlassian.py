@@ -1,21 +1,36 @@
 import requests
 from datetime import datetime, timedelta
+from authentication.providers.base import AtlassianProvider
 
 
-class AtlassianProvider:
+class AtlassianApiProvider:
     ACCESSIBLE_RESOURCES = 'https://api.atlassian.com/oauth/token/accessible-resources'
     BASE_URL = 'https://api.atlassian.com/ex/jira/'
 
-    def __init__(self, access_token, user):
-        self.__token = access_token
+    def __init__(self, access_token, refresh_token, user):
+        self.__access_token = access_token
+        self.__refresh_token = refresh_token
         self.user = user
-        self.headers = {'Authorization': f'Bearer {self.__token}',
+        self.headers = {'Authorization': f'Bearer {self.__access_token}',
                         'Accept': 'application/json'}
         self.search_url = f"{self.BASE_URL}{self.get_cloud_id()}/rest/api/3/"
         self.projects = self.get_projects()
 
+    def refresh_tokens(self):
+        atlassian_provider = AtlassianProvider('atlassian')
+        atlassian_provider.refresh(self.__refresh_token)
+        access = atlassian_provider.data['access_token']
+        refresh = atlassian_provider.data['refresh_token']
+        self.__access_token = access
+        self.headers['Authorization'] = f'Bearer {access}'
+        atlassian_provider.save_provider_tokens({'refresh': refresh,
+                                                 'access': access}, atlassian_provider.data['expires_in'],
+                                                self.user, 'atlassian', 'lamart')
+
     def get_cloud_id(self):
         """Get identifier of user to api requests"""
+
+        self.refresh_tokens()
         rq = requests.get(self.ACCESSIBLE_RESOURCES, headers=self.headers)
         if rq.status_code == 200:
             return rq.json()[0]['id']

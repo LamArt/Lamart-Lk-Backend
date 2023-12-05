@@ -131,4 +131,4 @@ class AtlassianProvider(Provider):
         if rq.status_code == 200:
             self.data = rq.json()
         else:
-            raise KeyError('not valid refresh token')
+            raise KeyError('Access token has been expired')
