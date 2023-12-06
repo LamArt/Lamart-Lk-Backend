@@ -19,7 +19,7 @@ def get_caldav_principal(request_body) -> Principal:
     return principal
 
 
-class GetYandexUnreadMailCountView(APIView):
+class YandexUnreadMailCountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     @extend_schema(
     summary='Get mail count',
@@ -46,7 +46,7 @@ class GetYandexUnreadMailCountView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
-class GetYandexCalendarEventsView(APIView):
+class YandexCalendarEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     @extend_schema(
     summary='Get today\'s events',
