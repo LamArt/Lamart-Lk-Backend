@@ -50,7 +50,7 @@ class ExchangeProviderTokenView(APIView):
         }
 
         try:
-            refresh_token = tokens['refresh_token']
+            refresh_token = request.data['refresh_token']
         except KeyError:
             refresh_token = None
 
@@ -88,14 +88,12 @@ class ExchangeCodeToTokenView(APIView):
         except KeyError:
             return Response('not valid authorization code', status=status.HTTP_400_BAD_REQUEST)
 
-        tokens = {
-            'refresh': refresh_token,
-            'access': access_token,
-        }
         try:
-            provider.save_tokens(tokens, provider.data['expires_in'],
-                                 request.user, 'atlassian', 'lamart')
+            provider.save_tokens(
+                {'refresh': refresh_token, 'access': access_token}, 
+                provider.data['expires_in'],
+                request.user, 'atlassian', 'lamart')
         except KeyError:
             return Response('user tokens not be saved', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(tokens, status=status.HTTP_201_CREATED)
+        return Response(access_token, status=status.HTTP_201_CREATED)
