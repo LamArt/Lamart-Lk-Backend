@@ -2,7 +2,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import serializers
 from rest_framework import status, permissions
-from authentication.providers.base import YandexProvider, AtlassianProvider
+from authentication.providers.yandex import YandexProvider
+from authentication.providers.atlassian import AtlassianProvider
 from .serialisers import TokensSerializer, ProviderSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema, inline_serializer
@@ -10,6 +11,10 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 
 class ExchangeProviderTokenView(APIView):
     serializer_class = ProviderSerializer
+
+    auth_providers = {
+        'yandex': YandexProvider,
+    }
 
     @extend_schema(
         responses=TokensSerializer,
@@ -19,7 +24,7 @@ class ExchangeProviderTokenView(APIView):
     )
     def post(self, request):
         try:
-            provider = YandexProvider(request.data['provider'])
+            provider = self.auth_providers[request.data['provider']]()
         except KeyError:
             return Response('provider does not exist', status=status.HTTP_400_BAD_REQUEST)
 
@@ -50,9 +55,9 @@ class ExchangeProviderTokenView(APIView):
             refresh_token = None
 
         try:
-            provider.save_provider_tokens({'access': request.data['access_token'], 'refresh': refresh_token},
-                                          request.data['expires_in'], provider.get_user(), request.data['provider'],
-                                          request.data['organisation'])
+            provider.save_tokens({'access': request.data['access_token'], 'refresh': refresh_token},
+                                 request.data['expires_in'], provider.get_user(), request.data['provider'],
+                                 request.data['organisation'])
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,12 +77,12 @@ class ExchangeCodeToTokenView(APIView):
     )
     def post(self, request):
         try:
-            provider = AtlassianProvider('atlassian')
+            provider = AtlassianProvider()
         except KeyError:
             return Response('provider does not exist', status=status.HTTP_400_BAD_REQUEST)
         try:
             authorization_code = request.data['authorization_code']
-            provider.get_data(authorization_code)
+            provider.get_token(authorization_code)
             access_token = provider.data['access_token']
             refresh_token = provider.data['refresh_token']
         except KeyError:
@@ -88,8 +93,8 @@ class ExchangeCodeToTokenView(APIView):
             'access': access_token,
         }
         try:
-            provider.save_provider_tokens(tokens, provider.data['expires_in'],
-                                          request.user, 'atlassian', 'lamart')
+            provider.save_tokens(tokens, provider.data['expires_in'],
+                                 request.user, 'atlassian', 'lamart')
         except KeyError:
             return Response('user tokens not be saved', status=status.HTTP_400_BAD_REQUEST)
 

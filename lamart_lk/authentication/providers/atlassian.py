@@ -1,6 +1,30 @@
 import requests
 from datetime import datetime, timedelta
-from authentication.providers.base import AtlassianProvider
+
+from authentication.providers.base import DataProvider
+
+
+class AtlassianProvider(DataProvider):
+    def __init__(self):
+        super().__init__('atlassian')
+
+    def get_token(self, code):
+        self.data_params['code'] = code
+        self.data_params['grant_type'] = 'authorization_code'
+        rq = requests.post(self.oauth_url, data=self.data_params)
+        if rq.status_code == 200:
+            self.data = rq.json()
+        else:
+            raise KeyError('not valid authorization code')
+
+    def refresh_token(self, refresh_token):
+        self.data_params['grant_type'] = 'refresh_token'
+        self.data_params['refresh_token'] = refresh_token
+        rq = requests.post(self.oauth_url, data=self.data_params)
+        if rq.status_code == 200:
+            self.data = rq.json()
+        else:
+            raise KeyError('not valid refresh token')
 
 
 class AtlassianApiProvider:
@@ -17,15 +41,15 @@ class AtlassianApiProvider:
         self.projects = self.get_projects()
 
     def refresh_tokens(self):
-        atlassian_provider = AtlassianProvider('atlassian')
-        atlassian_provider.refresh(self.__refresh_token)
+        atlassian_provider = AtlassianProvider()
+        atlassian_provider.refresh_token(self.__refresh_token)
         access = atlassian_provider.data['access_token']
         refresh = atlassian_provider.data['refresh_token']
         self.__access_token = access
         self.headers['Authorization'] = f'Bearer {access}'
-        atlassian_provider.save_provider_tokens({'refresh': refresh,
-                                                 'access': access}, atlassian_provider.data['expires_in'],
-                                                self.user, 'atlassian', 'lamart')
+        atlassian_provider.save_tokens({'refresh': refresh,
+                                        'access': access}, atlassian_provider.data['expires_in'],
+                                       self.user, 'atlassian', 'lamart')
 
     def get_cloud_id(self):
         """Get identifier of user to api requests"""
@@ -37,6 +61,7 @@ class AtlassianApiProvider:
 
     def get_user_email(self):
         """Get user JIRA email"""
+
         rq = requests.get(f'{self.search_url}/myself', headers=self.headers)
         if rq.status_code == 200:
             data = rq.json()
@@ -44,6 +69,7 @@ class AtlassianApiProvider:
 
     def get_projects(self):
         """Make list of projects"""
+
         rq = requests.get(f'{self.search_url}/project', headers=self.headers)
         if rq.status_code == 200:
             projects_data = rq.json()
