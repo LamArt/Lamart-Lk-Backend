@@ -56,8 +56,8 @@ class SalaryView(APIView):
     )
     def get(self, request):
         try:
-            atlassian_data = ProviderToken.objects.get(user=request.user, provider='atlassian')
-            atlassian_provider = StoryPoints(atlassian_data.access_token, atlassian_data.refresh_token, request.user)
+            atlassian_tokens = ProviderToken.objects.get(user=request.user, provider='atlassian')
+            user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
         except IndexError:
@@ -67,7 +67,7 @@ class SalaryView(APIView):
         user_salary = Salary.get_salary_data(request.user)
         if user_salary is None:
             return Response('User salary information not found', status=status.HTTP_404_NOT_FOUND)
-        story_points = atlassian_provider.count_story_points_at_moment()
+        story_points = user_story_points.count_at_moment()
         rate = user_salary.rate
         result = {
             'story_points': story_points,
@@ -96,11 +96,9 @@ class StatisticsStoryPointsView(APIView):
     )
     def get(self, request):
         try:
-            atlassian_data = ProviderToken.objects.get(user=request.user, provider='atlassian')
-            atlassian_provider = StoryPoints(atlassian_data.access_token, atlassian_data.refresh_token, request.user)
+            atlassian_tokens = ProviderToken.objects.get(user=request.user, provider='atlassian')
+            user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
 
-        sp_months = atlassian_provider.count_story_points_by_months()
-
-        return Response(sp_months, status=status.HTTP_200_OK)
+        return Response(user_story_points.count_by_months(), status=status.HTTP_200_OK)

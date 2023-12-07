@@ -2,31 +2,13 @@ from collections import defaultdict
 import requests
 from datetime import datetime, timedelta
 
-from authentication.providers.atlassian import AtlassianApiProvider
+from authentication.providers.atlassian import AtlassianUserProfile
 
 
-class StoryPoints(AtlassianApiProvider):
+class StoryPoints(AtlassianUserProfile):
     current_date = datetime.now()
 
-    def take_tasks(self, created_type, sprints=''):
-        """Make request to jira api with JQL, return data of projects"""
-
-        if not self.projects:
-            return None
-        query_of_projects = ' OR '.join([f'project={project}' for project in self.projects])
-        email = self.get_user_email()
-        jql_query = f'{sprints}({query_of_projects}) AND created>={created_type} AND assignee="{email}" AND status IN ("DONE", "НА ПРОВЕРКЕ")'
-        params = {
-            'jql': jql_query,
-            'fields': 'customfield_10016,created',
-            'maxResults': 100000,
-        }
-        rq = requests.get(f'{self.search_url}/search', headers=self.headers, params=params)
-        if rq.status_code == 200:
-            response_data = rq.json()
-            return response_data
-
-    def count_story_points_at_moment(self):
+    def count_at_moment(self):
         """Counter sp of ALL projects with open sprints for current month"""
 
         issue_data = self.take_tasks('startOfMonth()', 'sprint in openSprints() AND')
@@ -40,7 +22,7 @@ class StoryPoints(AtlassianApiProvider):
 
         return total
 
-    def count_story_points_by_months(self):
+    def count_by_months(self):
         """Counter sp for the last 10 months"""
 
         time_delta = 10 * 4
