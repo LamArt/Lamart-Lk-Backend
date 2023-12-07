@@ -6,5 +6,4 @@ urlpatterns = [
     path('exchange_token/', ExchangeProviderTokenView.as_view(), name='exchange_provider_token'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('get_token_jira/', ExchangeCodeToTokenView.as_view(), name='exchange_code_to_token'),
-    path('refresh_jira/', RefreshAtlassianView.as_view(), name='refresh_atlassian'),
 ]
