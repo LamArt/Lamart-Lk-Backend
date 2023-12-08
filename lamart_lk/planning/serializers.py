@@ -9,6 +9,14 @@ class EventDataSerializer(serializers.Serializer):
     url = serializers.CharField()
 
 
+class EventCreationSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
+    create_conference = serializers.BooleanField()
+
+
 class MailCountSerializer(serializers.Serializer):
     count = serializers.CharField()
 

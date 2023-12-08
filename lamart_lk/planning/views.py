@@ -6,7 +6,8 @@ from drf_spectacular.utils import extend_schema
 from imaplib import IMAP4, IMAP4_SSL
 from caldav import DAVClient, Principal
 from caldav.lib.error import NotFoundError
-from .serializers import EventDataSerializer, MailCountSerializer
+from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer
+from icalendar import Event, vDatetime
 
 
 def get_caldav_principal(request_body) -> Principal:
@@ -86,4 +87,30 @@ class YandexCalendarEventsView(APIView):
             if len(response) > 0\
             else Response(status=status.HTTP_204_NO_CONTENT)
 
+
+    @extend_schema(
+        request=EventCreationSerializer,
+        summary='Add new event',
+        description='Takes calendar\'s data, creates new event to yandex calendar',
+        tags=['planning'],
+    )
+    def post(self, request):
+        principal = get_caldav_principal(request)
+
+        try:
+            calendar = principal.calendars()[0]
+        except NotFoundError:
+            return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
+
+        event = Event()
+        event['summary'] = request.data['title']
+        event['description'] = request.data['description']
+        event['dtstart'] = vDatetime(datetime.datetime.fromisoformat(request.data['start_time']))
+        event['dtend'] = vDatetime(datetime.datetime.fromisoformat(request.data['end_time']))
+        if request.data['create_conference']:
+            event['x-telemost-required'] = True
+
+        calendar.add_event(ical=event.to_ical())
+
+        return Response(status=status.HTTP_201_CREATED)
 
