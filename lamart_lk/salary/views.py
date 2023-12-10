@@ -88,8 +88,7 @@ class StatisticsStoryPointsView(APIView):
         responses={200: inline_serializer(
             name='SuccessfulGetStatistics',
             fields={
-                'weeks': serializers.DictField(),
-                'months': serializers.DictField(),
+                'month': serializers.IntegerField(),
             }
         )},
         summary='Get story points data for graph',
