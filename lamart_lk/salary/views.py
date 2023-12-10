@@ -43,7 +43,7 @@ class SalaryView(APIView):
         responses={200: inline_serializer(
             name='SuccessfulResponseSalary',
             fields={
-                'utils': serializers.IntegerField(),
+                'story_points': serializers.IntegerField(),
                 'salary': serializers.IntegerField(),
                 'rate': serializers.IntegerField(),
                 'credit': serializers.IntegerField(),
