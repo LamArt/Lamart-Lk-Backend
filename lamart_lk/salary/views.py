@@ -6,7 +6,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiRespo
 
 from authentication.models import ProviderToken
 from salary.serializers import SalarySerializer
-from salary.story_points.utils import StoryPoints
+from salary.utils.story_points import StoryPoints
 from salary.models import Salary
 
 
@@ -43,7 +43,7 @@ class SalaryView(APIView):
         responses={200: inline_serializer(
             name='SuccessfulResponseSalary',
             fields={
-                'story_points': serializers.IntegerField(),
+                'utils': serializers.IntegerField(),
                 'salary': serializers.IntegerField(),
                 'rate': serializers.IntegerField(),
                 'credit': serializers.IntegerField(),
@@ -63,6 +63,8 @@ class SalaryView(APIView):
         except IndexError:
             return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
                             status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
         user_salary = Salary.get_salary_data(request.user)
         if user_salary is None:
@@ -100,5 +102,10 @@ class StatisticsStoryPointsView(APIView):
             user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
+        except IndexError:
+            return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
+                            status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
         return Response(user_story_points.count_by_months(), status=status.HTTP_200_OK)

@@ -2,7 +2,7 @@ from collections import defaultdict
 import requests
 from datetime import datetime, timedelta
 
-from authentication.providers.atlassian import AtlassianUserProfile
+from salary.utils.profile import AtlassianUserProfile
 
 
 class StoryPoints(AtlassianUserProfile):
