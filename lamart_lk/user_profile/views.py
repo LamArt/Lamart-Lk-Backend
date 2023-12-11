@@ -29,6 +29,7 @@ class ProfileData(APIView):
             'is_team_lead': request.user.is_team_lead,
             'gender': request.user.gender,
             'team': request.user.team,
+            'id': request.user.pk
         }
         return Response(data, status=status.HTTP_200_OK)
 
