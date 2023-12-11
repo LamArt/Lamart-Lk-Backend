@@ -49,7 +49,7 @@ class EmployeeFeedbackForm(models.Model):
 class Team(models.Model):
     name = models.CharField(max_length=50)
     team_lead = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='team_lead',
-                                  blank=False)
+                                  blank=False, null=True)
 
     def __str__(self):
         return self.name
