@@ -77,8 +77,7 @@ class YandexCalendarEventsView(APIView):
 
                 event_info['title'] = str(event.summary.value)
                 try:
-                    description = " ".join(str(event.description.value).replace('\n', ' ').split())
-                    event_info['description'] = description
+                    event_info['description'] = str(event.description.value)
                 except AttributeError:
                     event_info['description'] = None
                 event_info['start_time'] = str(event.dtstart.value)
