@@ -1,5 +1,5 @@
 import datetime
-from datetime import timedelta, datetime
+from datetime import timedelta
 from dateutil import tz
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -60,8 +60,8 @@ class YandexCalendarEventsView(APIView):
     def get(self, request):
         principal = get_caldav_principal(request)
 
-        today = datetime.utcnow().date()
-        start = datetime(today.year, today.month, today.day, tzinfo=tz.tzlocal())
+        today = datetime.datetime.utcnow().date()
+        start = datetime.datetime(today.year, today.month, today.day, tzinfo=tz.tzlocal())
         end = start + timedelta(1)
 
         try:
@@ -85,6 +85,8 @@ class YandexCalendarEventsView(APIView):
                 event_info['url'] = str(event.url.value)
 
                 response[str(event.uid.value)] = event_info
+
+                response = dict(sorted(response.items(), key=lambda item: item[1]['start_time'].split(' ')[1]))
 
         return Response(response, status=status.HTTP_200_OK)\
             if len(response) > 0\
