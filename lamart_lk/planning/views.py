@@ -103,7 +103,11 @@ class YandexCalendarEventsView(APIView):
         def get_rrule_string(rrule):
             try:
                 until_date = datetime.datetime.fromisoformat(rrule['until'])
-                rrule['until'] = f'{until_date.year}{until_date.month}{until_date.day}'
+                rrule['until'] = f'{until_date.year}'\
+                                        f'{0 if until_date.month < 10 else ""}'\
+                                        f'{until_date.month}'\
+                                        f'{0 if until_date.day < 10 else ""}'\
+                                        f'{until_date.day}'
             except KeyError:
                 pass
             rule_list = [f'{x[0].upper().replace("_", "")}={x[1].upper()}' for x in rrule.items() if x[1]]
