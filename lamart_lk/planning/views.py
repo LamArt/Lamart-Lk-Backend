@@ -100,6 +100,15 @@ class YandexCalendarEventsView(APIView):
         tags=['planning'],
     )
     def post(self, request):
+        def get_rrule_string(rrule):
+            try:
+                until_date = datetime.datetime.fromisoformat(rrule['until'])
+                rrule['until'] = f'{until_date.year}{until_date.month}{until_date.day}'
+            except KeyError:
+                pass
+            rule_list = [f'{x[0].upper().replace("_", "")}={x[1].upper()}' for x in rrule.items() if x[1]]
+            return ';'.join(rule_list)
+
         principal = get_caldav_principal(request)
 
         try:
@@ -108,12 +117,35 @@ class YandexCalendarEventsView(APIView):
             return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
 
         event = ICalEvent()
-        event['summary'] = request.data['title']
-        event['description'] = request.data['description']
-        event['dtstart'] = vDatetime(datetime.datetime.fromisoformat(request.data['start_time']))
-        event['dtend'] = vDatetime(datetime.datetime.fromisoformat(request.data['end_time']))
-        if request.data['create_conference']:
-            event['x-telemost-required'] = True
+        try:
+            event['summary'] = request.data['title'] if request.data['title'] else 'Без названия'
+        except KeyError:
+            return Response('Could not find \'title\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['dtstart'] = vDatetime(datetime.datetime.fromisoformat(request.data['start_time']))
+        except KeyError:
+            return Response('Could not find \'start_time\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['dtend'] = vDatetime(datetime.datetime.fromisoformat(request.data['end_time']))
+        except KeyError:
+            return Response('Could not find \'end_time\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['description'] = request.data['description']
+        except KeyError:
+            pass
+
+        try:
+            event['rrule'] = get_rrule_string(request.data['rrule'])
+        except KeyError:
+            pass
+
+        try:
+            event['x-telemost-required'] = request.data['create_conference']
+        except KeyError:
+            return Response('Could not find \'create_conference\' in request body', status=status.HTTP_400_BAD_REQUEST)
 
         calendar.add_event(ical=event.to_ical())
 
