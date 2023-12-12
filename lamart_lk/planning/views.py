@@ -1,13 +1,15 @@
 import datetime
+from datetime import timedelta, datetime
+from dateutil import tz
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
 from drf_spectacular.utils import extend_schema
 from imaplib import IMAP4, IMAP4_SSL
-from caldav import DAVClient, Principal
+from caldav import DAVClient, Principal, Event as CalEvent
 from caldav.lib.error import NotFoundError
 from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer
-from icalendar import Event, vDatetime
+from icalendar import vDatetime, Event as ICalEvent
 
 
 def get_caldav_principal(request_body) -> Principal:
@@ -58,19 +60,21 @@ class YandexCalendarEventsView(APIView):
     def get(self, request):
         principal = get_caldav_principal(request)
 
+        today = datetime.utcnow().date()
+        start = datetime(today.year, today.month, today.day, tzinfo=tz.tzlocal())
+        end = start + timedelta(1)
+
         try:
             calendars = principal.calendars()
         except NotFoundError:
             return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
         response = {}
-        date = str(datetime.date.today())
+
         for calendar in calendars:
-            for raw_event in calendar.events():
+            for raw_event in calendar.search(comp_class=CalEvent, start=start, end=end):
                 event_info = {}
                 event = raw_event.vobject_instance.vevent
 
-                if date not in str(event.dtstart.value):
-                     continue
                 event_info['title'] = str(event.summary.value)
                 try:
                     description = " ".join(str(event.description.value).replace('\n', ' ').split())
@@ -102,7 +106,7 @@ class YandexCalendarEventsView(APIView):
         except NotFoundError:
             return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
 
-        event = Event()
+        event = ICalEvent()
         event['summary'] = request.data['title']
         event['description'] = request.data['description']
         event['dtstart'] = vDatetime(datetime.datetime.fromisoformat(request.data['start_time']))
