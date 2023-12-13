@@ -88,11 +88,13 @@ class StatisticsStoryPointsView(APIView):
         responses={200: inline_serializer(
             name='SuccessfulGetStatistics',
             fields={
-                'month': serializers.IntegerField(),
+                'month1': serializers.IntegerField(),
+                'month2': serializers.IntegerField(),
+                'month3': serializers.IntegerField(),
             }
         )},
-        summary='Get story points data for graph',
-        description='Return story points for last 10 months',
+        summary='Get story points for statistic graph',
+        description='Return story points for last 12 months',
         tags=['salary'],
     )
     def get(self, request):
