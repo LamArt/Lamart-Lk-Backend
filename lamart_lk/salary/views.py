@@ -15,31 +15,6 @@ class SalaryView(APIView):
     serializer_class = SalarySerializer
 
     @extend_schema(
-        responses={
-            201: OpenApiResponse(description="Successful update"),
-            400: OpenApiResponse(description="Request error"),
-            403: OpenApiResponse(description="Forbidden request, only for admins"),
-            404: OpenApiResponse(description="User salary not found")
-        },
-        summary='Update salary info',
-        description='Update salary info ONLY BY ADMIN (user stuff_status=True)',
-        tags=['salary'],
-    )
-    def put(self, request):
-        if not request.user.is_staff:
-            return Response('Forbidden request, only for admins', status=status.HTTP_403_FORBIDDEN)
-
-        user_salary = Salary.get_salary_data(request.user)
-        if user_salary is None:
-            return Response('User salary information not found', status=status.HTTP_404_NOT_FOUND)
-
-        serializer = SalarySerializer(user_salary, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response('Updated successfully', status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @extend_schema(
         responses={200: inline_serializer(
             name='SuccessfulResponseSalary',
             fields={
@@ -60,9 +35,6 @@ class SalaryView(APIView):
             user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
-        except IndexError:
-            return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
-                            status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
@@ -103,9 +75,6 @@ class StatisticsStoryPointsView(APIView):
             user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
-        except IndexError:
-            return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
-                            status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
