@@ -2,9 +2,6 @@ import unittest
 from unittest.mock import patch, Mock
 from datetime import datetime, timedelta
 
-from rest_framework.response import Response
-from rest_framework import status
-
 from salary.utils.story_points import StoryPoints
 from salary.utils.profile import AtlassianUserProfile
 
@@ -16,7 +13,7 @@ class TestStoryPoints(unittest.TestCase):
         self.story_points = StoryPoints(refresh='fake_token', user=1)
 
     @patch('salary.utils.story_points.AtlassianUserProfile.take_tasks')
-    def test_count_at_moment(self, mock_take_tasks):
+    def test_count_at_moment_success(self, mock_take_tasks):
         mock_take_tasks.return_value = {
             'issues': [
                 {
@@ -43,7 +40,13 @@ class TestStoryPoints(unittest.TestCase):
         self.assertEqual(result, 16)
 
     @patch('salary.utils.story_points.AtlassianUserProfile.take_tasks')
-    def test_count_by_months(self, mock_take_tasks):
+    def test_count_at_moment_none_issue_data(self, mock_take_tasks):
+        mock_take_tasks.return_value = None
+        result = self.story_points.count_at_moment()
+        self.assertEqual(result, 0)
+
+    @patch('salary.utils.story_points.AtlassianUserProfile.take_tasks')
+    def test_count_by_months_success(self, mock_take_tasks):
         self.story_points.current_date = datetime(2023, 12, 12)
 
         mock_take_tasks.return_value = {
@@ -74,7 +77,13 @@ class TestStoryPoints(unittest.TestCase):
         expected_result = {'December': 8, 'November': 13, 'October': 4}
         self.assertEqual(result, expected_result)
 
-        mock_take_tasks.assert_called_once_with('startOfMonth(-10M)')
+        mock_take_tasks.assert_called_once_with('startOfMonth(-12M)')
+
+    @patch('salary.utils.story_points.AtlassianUserProfile.take_tasks')
+    def test_count_by_months_none_issue_data(self, mock_take_tasks):
+        mock_take_tasks.return_value = None
+        result = self.story_points.count_by_months()
+        self.assertEqual(result, {})
 
 
 if __name__ == '__main__':
