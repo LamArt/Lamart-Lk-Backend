@@ -8,8 +8,3 @@ class ProviderSerializer(ModelSerializer):
     class Meta:
         model = ProviderToken
         exclude = ['user']
-
-
-class TokensSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-    access = serializers.CharField()

@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework import status, permissions
 from authentication.providers.yandex import YandexProvider
 from authentication.providers.atlassian import AtlassianProvider
-from .serialisers import TokensSerializer, ProviderSerializer
+from .serialisers import ProviderSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema, inline_serializer
 
@@ -17,7 +17,13 @@ class ExchangeProviderTokenView(APIView):
     }
 
     @extend_schema(
-        responses=TokensSerializer,
+        responses={201: inline_serializer(
+            name='TokenAuthSerializer',
+            fields={
+                'refresh': serializers.CharField(),
+                'access': serializers.CharField(),
+            }
+        )},
         summary='Create JWT provider',
         description='Takes provider JWT, organisation returns access and refresh JWT',
         tags=['auth'],
@@ -70,7 +76,12 @@ class ExchangeCodeToTokenView(APIView):
                                          fields={'authorization_code': serializers.CharField()})
 
     @extend_schema(
-        responses=TokensSerializer,
+        responses={201: inline_serializer(
+            name='TokenDataSerializer',
+            fields={
+                'access': serializers.CharField(),
+            }
+        )},
         summary='Exchange code to atlassian JWT',
         description='Takes authorization code, returns atlassian access and refresh JWT',
         tags=['auth'],
@@ -90,10 +101,10 @@ class ExchangeCodeToTokenView(APIView):
 
         try:
             provider.save_tokens(
-                {'refresh': refresh_token, 'access': access_token}, 
+                {'refresh': refresh_token, 'access': access_token},
                 provider.data['expires_in'],
                 request.user, 'atlassian', 'lamart')
         except KeyError:
             return Response('user tokens not be saved', status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(access_token, status=status.HTTP_201_CREATED)
+        return Response({'access': access_token}, status=status.HTTP_201_CREATED)
