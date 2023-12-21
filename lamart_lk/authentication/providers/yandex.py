@@ -40,7 +40,7 @@ class YandexProvider(AuthProvider):
                 birthday=self.data['birthday'],
                 email=self.data['default_email'],
                 gender=self.data['sex'],
-                phone=self.data['default_phone'],
+                phone=self.data['default_phone']['number'],
             )
             return new_user[0]
         except KeyError:
