@@ -1,3 +1,4 @@
+import self as self
 from rest_framework import serializers
 
 
@@ -13,3 +14,13 @@ class MailCountSerializer(serializers.Serializer):
     count = serializers.CharField()
 
 
+class IssuePrioritySerializer(serializers.Serializer):
+    name = serializers.CharField()
+    id = serializers.CharField()
+
+
+class IssueDataSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    priority = IssuePrioritySerializer()
+    subtasks = serializers.ListField(child=serializers.DictField())
