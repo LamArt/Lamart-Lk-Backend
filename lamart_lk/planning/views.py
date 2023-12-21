@@ -133,7 +133,7 @@ class AtlassianJiraIssuesView(APIView):
             return Response(rq.json(), status=rq.status_code)
 
         def convert_issue_data(data):
-            def change_info_data(issue):
+            def return_issue_info(issue):
                 issue_info = {}
                 issue_info['title'] = issue['fields']['summary']
                 if not (issue['fields']['description']):
@@ -159,14 +159,14 @@ class AtlassianJiraIssuesView(APIView):
             for issue in issues:
                 if 'parent' in issue['fields'].keys():
                     continue
-                issue_info = change_info_data(issue)
+                issue_info = return_issue_info(issue)
                 issue_info['subtasks'] = []
                 response_data[issue['key']] = issue_info
 
             for issue in issues:
                 if not('parent' in issue['fields'].keys()):
                     continue
-                issue_info = change_info_data(issue)
+                issue_info = return_issue_info(issue)
                 response_data[issue['fields']['parent']['key']]['subtasks'].append(issue_info)
 
             return dict(sorted(response_data.items(), key=lambda item: item[1]['priority']['id']))
