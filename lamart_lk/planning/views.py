@@ -136,22 +136,28 @@ class AtlassianJiraIssuesView(APIView):
             def return_issue_info(issue):
                 issue_info = {}
                 issue_info['title'] = issue['fields']['summary']
+                issue_info['priority'] = {
+                    'name': issue['fields']['priority']['name'],
+                    'id': str(issue['fields']['priority']['id'])
+                }
+
                 if not (issue['fields']['description']):
-                    issue_info['description'] = issue['fields']['description']
+                    issue_info['description'] = None
                 else:
                     all_text = []
                     for content in issue['fields']['description']['content']:
                         all_content_text = []
                         for sub_content in content['content']:
-                            all_text.append(sub_content['text'])
+                            try:
+                                all_text.append(sub_content['text'])
+                            except KeyError:
+                                issue_info['description'] = None
+                                return issue_info
+
                         all_text.append(' '.join(all_content_text))
                         all_content_text.clear()
                     issue_info['description'] = '\r\n'.join(all_text)
 
-                issue_info['priority'] = {
-                    'name': issue['fields']['priority']['name'],
-                    'id': str(issue['fields']['priority']['id'])
-                }
                 return issue_info
 
             response_data = {}
