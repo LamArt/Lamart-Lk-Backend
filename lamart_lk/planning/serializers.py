@@ -18,8 +18,14 @@ class IssuePrioritySerializer(serializers.Serializer):
     id = serializers.CharField()
 
 
+class IssueSubTaskSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    priority = IssuePrioritySerializer()
+
+
 class IssueDataSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
     priority = IssuePrioritySerializer()
-    subtasks = serializers.ListField(child=serializers.DictField())
+    subtasks = serializers.ListField(child=IssueSubTaskSerializer())

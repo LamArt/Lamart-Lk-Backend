@@ -117,7 +117,7 @@ class AtlassianJiraIssuesView(APIView):
             else:
                 return Response(rq.json(), status=rq.status_code)
 
-            query_of_projects = ' OR '.join([f'project={project}' for project in projects])
+            query_of_projects = ' OR '.join([f'project="{project}"' for project in projects])
             jql_query = f'({query_of_projects})' \
                         f' AND assignee=currentUser()' \
                         f' AND statusCategory IN (2, 4)' \
