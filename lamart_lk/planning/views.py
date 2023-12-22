@@ -117,7 +117,7 @@ class AtlassianJiraIssuesView(APIView):
             else:
                 return Response(rq.json(), status=rq.status_code)
 
-            query_of_projects = ' OR '.join([f'project={project}' for project in projects])
+            query_of_projects = ' OR '.join([f'project="{project}"' for project in projects])
             jql_query = f'({query_of_projects})' \
                         f' AND assignee=currentUser()' \
                         f' AND statusCategory IN (2, 4)' \
@@ -133,21 +133,10 @@ class AtlassianJiraIssuesView(APIView):
             return Response(rq.json(), status=rq.status_code)
 
         def convert_issue_data(data):
-            def return_issue_info(issue):
+            def append_issue_info(issue):
                 issue_info = {}
                 issue_info['title'] = issue['fields']['summary']
-                if not (issue['fields']['description']):
-                    issue_info['description'] = issue['fields']['description']
-                else:
-                    all_text = []
-                    for content in issue['fields']['description']['content']:
-                        all_content_text = []
-                        for sub_content in content['content']:
-                            all_text.append(sub_content['text'])
-                        all_text.append(' '.join(all_content_text))
-                        all_content_text.clear()
-                    issue_info['description'] = '\r\n'.join(all_text)
-
+                issue_info['description'] = issue['fields']['description']['content']
                 issue_info['priority'] = {
                     'name': issue['fields']['priority']['name'],
                     'id': str(issue['fields']['priority']['id'])
@@ -159,14 +148,14 @@ class AtlassianJiraIssuesView(APIView):
             for issue in issues:
                 if 'parent' in issue['fields'].keys():
                     continue
-                issue_info = return_issue_info(issue)
+                issue_info = append_issue_info(issue)
                 issue_info['subtasks'] = []
                 response_data[issue['key']] = issue_info
 
             for issue in issues:
                 if not('parent' in issue['fields'].keys()):
                     continue
-                issue_info = return_issue_info(issue)
+                issue_info = append_issue_info(issue)
                 response_data[issue['fields']['parent']['key']]['subtasks'].append(issue_info)
 
             return dict(sorted(response_data.items(), key=lambda item: item[1]['priority']['id']))
