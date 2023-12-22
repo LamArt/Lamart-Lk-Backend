@@ -1,4 +1,3 @@
-import self as self
 from rest_framework import serializers
 
 
