@@ -15,7 +15,6 @@ class AtlassianUserProfile:
         self.headers = {'Authorization': f'Bearer {new_access_token}',
                         'Accept': 'application/json'}
         self.search_url = f"{self.BASE_URL}{self.get_cloud_id()}/rest/api/3/"
-        self.projects = self.get_projects()
         atlassian_provider.save_tokens({'refresh': new_refresh_token,
                                         'access': new_access_token}, atlassian_provider.data['expires_in'],
                                        self.user, 'atlassian', 'lamart')
@@ -35,22 +34,12 @@ class AtlassianUserProfile:
             data = rq.json()
             return data['emailAddress']
 
-    def get_projects(self):
-        """Make list of projects"""
-
-        rq = requests.get(f'{self.search_url}/project', headers=self.headers)
-        if rq.status_code == 200:
-            projects_data = rq.json()
-            return [project_info['key'] for project_info in projects_data if 'key' in project_info]
-
-    def take_tasks(self, created_type, sprints=''):
+    def take_tasks(self, projects, created_type):
         """Make request to jira api with JQL, return data of projects"""
 
-        if not self.projects:
-            return None
-        query_of_projects = ' OR '.join([f'project={project}' for project in self.projects])
+        query_of_projects = ' OR '.join([f'project={project}' for project in projects])
         email = self.get_email()
-        jql_query = f'{sprints}({query_of_projects}) AND created>={created_type} AND assignee="{email}" AND status IN ("DONE", "НА ПРОВЕРКЕ")'
+        jql_query = f'({query_of_projects}) AND created>={created_type} AND assignee="{email}" AND status IN ("DONE", "НА ПРОВЕРКЕ")'
         params = {
             'jql': jql_query,
             'fields': 'customfield_10016,created',

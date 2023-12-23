@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, Mock
 from datetime import datetime, timedelta
 
-from salary.utils.story_points import StoryPoints
+from salary.utils.salary import StoryPoints
 from salary.utils.profile import AtlassianUserProfile
 
 
