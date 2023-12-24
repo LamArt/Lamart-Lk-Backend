@@ -22,10 +22,12 @@ class IssueSubTaskSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
     priority = IssuePrioritySerializer()
+    story_points = serializers.IntegerField()
 
 
 class IssueDataSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
     priority = IssuePrioritySerializer()
+    story_points = serializers.IntegerField()
     subtasks = serializers.ListField(child=IssueSubTaskSerializer())
