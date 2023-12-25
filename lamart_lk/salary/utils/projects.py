@@ -1,17 +1,15 @@
-from salary.models import UsersProjects
+from salary.services import UsersProjectsService
 
 
 class EmployeeProjectManager:
     def __init__(self, user):
         self.user = user
+        self.projects_service = UsersProjectsService()
 
     @property
     def projects_info(self):
         """Make an instance of UsersProjects"""
-        try:
-            return UsersProjects.objects.filter(user=self.user)
-        except UsersProjects.DoesNotExist:
-            return None
+        return self.projects_service.get_projects_by_user(self.user)
 
     def get_jira_keys(self):
         """Get keys for jira requests"""

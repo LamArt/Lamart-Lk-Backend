@@ -20,15 +20,18 @@ class SalaryView(APIView):
         examples=[
             OpenApiExample(
                 "Example of salary data response.",
-                value={"total_salary": 18050,
-                       "VMS": {
-                           "role": "Backend-developer",
-                           'story_points': 20,
-                           "rate": 650,
-                           "salary": 3250,
-                           "reward": 5000,
-                           "credit": 2000
-                       }, },
+                value={"total_salary": 6500,
+                       'projects': {
+                           "VMS": {
+                               "role": "Backend-developer",
+                               'story_points': 40,
+                               "rate": 650,
+                               "salary": 3250,
+                               "reward": 5000,
+                               "credit": 2000
+                           },
+                       },
+                       },
                 request_only=False,
                 response_only=True,
             ),

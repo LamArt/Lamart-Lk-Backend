@@ -14,7 +14,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager):
     current_date = datetime.now()
 
     def count_story_points_by_projects(self):
-        """Counter sp of ALL projects for current month by user"""
+        """Counter sp of projects for current month by user"""
         issue_data = self.take_tasks(self.project_manager.get_jira_keys(), 'startOfMonth()')
         if issue_data is None:
             return {}
@@ -37,29 +37,32 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager):
         projects_data = self.project_manager.get_projects_data()
 
         salary_data = {
-            'total_salary': 0
+            'total_salary': 0,
+            'projects': {}
         }
 
         for project_name, project_info in projects_data.items():
             role = project_info['role']
             rate = project_info['rate']
+            reward = project_info['reward']
+            credit = project_info['credit']
 
             story_points_for_project = story_points[project_info['jira_key']]
             project_salary = self.calculate_salary(story_points_for_project, rate, role)
-            salary_data[project_name] = {
+            salary_data['total_salary'] += project_salary
+            salary_data['projects'][project_name] = {
                 'role': role.name,
                 'story_points': story_points_for_project,
                 'rate': rate,
                 'salary': project_salary,
-                'reward': project_info['reward'],
-                'credit': project_info['credit'],
+                'reward': reward,
+                'credit': credit,
             }
-            salary_data['total_salary'] += project_salary
 
         return salary_data
 
     def count_story_points_by_months(self):
-        """Counter story points for the last 12 months by project"""
+        """Counter story points for the last 12 months by projects"""
         issue_data = self.take_tasks(self.project_manager.get_jira_keys(), 'startOfMonth(-12M)')
         project_month_data = defaultdict(lambda: defaultdict(int))
 
