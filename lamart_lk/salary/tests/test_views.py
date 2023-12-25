@@ -3,28 +3,44 @@ from unittest.mock import patch, Mock
 from rest_framework import status
 from authentication.models import ProviderToken
 
-from salary.views import SalaryView, StoryPoints, StatisticsStoryPointsView
+from salary.views import SalaryView, SalaryStoryPoints, StatisticsStoryPointsView
 
 
 class TestSalaryView(unittest.TestCase):
 
-    @patch('salary.views.Salary.get_salary_data')
-    @patch('salary.views.StoryPoints')
+    @patch('salary.views.SalaryStoryPoints')
     @patch('salary.views.ProviderToken.objects.get')
-    def test_get_salary_data_success(self, mock_provider_token, mock_story_points, mock_get_salary):
+    def test_get_salary_data_success(self, mock_provider_token, mock_story_points):
         mock_request = Mock()
-        mock_story_points.return_value.count_at_moment.return_value = 10
-        mock_get_salary.return_value = Mock(rate=650, credit=5000, reward=10000)
+        mock_story_points.return_value.get_salary_data.return_value = {
+            "total_salary": 6500,
+            'projects': {
+                "VMS": {
+                    "role": "Backend-developer",
+                    'story_points': 40,
+                    "rate": 650,
+                    "salary": 3250,
+                    "reward": 5000,
+                    "credit": 2000
+                },
+            },
+        }
 
         view = SalaryView()
         response = view.get(mock_request)
 
         expected_data = {
-            'story_points': 10,
-            'salary': 6500,
-            'rate': 650,
-            'credit': 5000,
-            'reward': 10000
+            "total_salary": 6500,
+            'projects': {
+                "VMS": {
+                    "role": "Backend-developer",
+                    'story_points': 40,
+                    "rate": 650,
+                    "salary": 3250,
+                    "reward": 5000,
+                    "credit": 2000
+                },
+            },
         }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -41,7 +57,7 @@ class TestSalaryView(unittest.TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, 'Jira not connected')
 
-    @patch('salary.views.StoryPoints')
+    @patch('salary.views.SalaryStoryPoints')
     @patch('salary.views.ProviderToken.objects.get')
     def test_get_salary_data_unauthorized(self, mock_provider_token, mock_user_story_points):
         mock_request = Mock()
@@ -53,26 +69,12 @@ class TestSalaryView(unittest.TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.data, 'Unauthorized, make jira authentication again')
 
-    @patch('salary.views.Salary.get_salary_data')
-    @patch('salary.views.StoryPoints')
-    @patch('salary.views.ProviderToken.objects.get')
-    def test_get_salary_data_no_info(self, mock_provider_token, mock_user_story_points, mock_get_user_salary_info):
-        mock_request = Mock()
-        mock_get_user_salary_info.return_value = None
-
-        view = SalaryView()
-        response = view.get(mock_request)
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, 'User salary information not found')
-
 
 class TestStatisticsStoryPointsView(unittest.TestCase):
 
-    @patch('salary.views.Salary.get_salary_data')
-    @patch('salary.views.StoryPoints')
+    @patch('salary.views.SalaryStoryPoints')
     @patch('salary.views.ProviderToken.objects.get')
-    def test_get_salary_data_success(self, mock_provider_token, mock_story_points, mock_get_salary):
+    def test_get_salary_data_success(self, mock_provider_token, mock_story_points):
         mock_request = Mock()
         mock_story_points.return_value.count_by_months.return_value = {'December': 10, 'November': 30, 'October': 5}
 

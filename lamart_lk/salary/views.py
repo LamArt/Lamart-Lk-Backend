@@ -88,4 +88,4 @@ class StatisticsStoryPointsView(APIView):
         except KeyError:
             return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response(user_story_points.get_story_points_statistics(), status=status.HTTP_200_OK)
+        return Response(user_story_points.count_story_points_by_months(), status=status.HTTP_200_OK)

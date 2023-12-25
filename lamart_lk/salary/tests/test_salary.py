@@ -2,15 +2,15 @@ import unittest
 from unittest.mock import patch, Mock
 from datetime import datetime, timedelta
 
-from salary.utils.salary import StoryPoints
+from salary.utils.salary import SalaryStoryPoints
 from salary.utils.profile import AtlassianUserProfile
 
 
-class TestStoryPoints(unittest.TestCase):
+class TestSalaryStoryPoints(unittest.TestCase):
 
     @patch('salary.utils.profile.AtlassianProvider')
     def setUp(self, mock_atlassian_provider):
-        self.story_points = StoryPoints(refresh='fake_token', user=1)
+        self.story_points = SalaryStoryPoints('refresh_token', 1)
 
     @patch('salary.utils.story_points.AtlassianUserProfile.take_tasks')
     def test_count_at_moment_success(self, mock_take_tasks):
