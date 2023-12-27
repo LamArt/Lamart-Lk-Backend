@@ -1,14 +1,18 @@
 import datetime
+from datetime import timedelta
+from dateutil import tz
 import requests
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
 from drf_spectacular.utils import extend_schema
 from imaplib import IMAP4, IMAP4_SSL
-from caldav import DAVClient, Principal
+from caldav import DAVClient, Principal, Event as CalEvent
 from caldav.lib.error import NotFoundError
-from .serializers import EventDataSerializer, MailCountSerializer, IssueDataSerializer
-
+from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer, IssueDataSerializer
+from icalendar import vDatetime, Event as ICalEvent
+from salary.utils.profile import AtlassianUserProfile
+from django.db.models import ObjectDoesNotExist
 
 def get_caldav_principal(request_body) -> Principal:
     username = request_body.user.email
@@ -22,11 +26,12 @@ def get_caldav_principal(request_body) -> Principal:
 
 class YandexUnreadMailCountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
-    summary='Get mail count',
-    responses=MailCountSerializer,
-    description='Returns yandex unread mails count',
-    tags=['planning'],
+        summary='Get mail count',
+        responses=MailCountSerializer,
+        description='Returns yandex unread mails count',
+        tags=['planning'],
     )
     def get(self, request):
         username = request.user.email
@@ -49,32 +54,34 @@ class YandexUnreadMailCountView(APIView):
 
 class YandexCalendarEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
-    summary='Get today\'s events',
-    responses=EventDataSerializer,
-    description='Returns yandex today\'s calendar events',
-    tags=['planning'],
+        summary='Get today\'s events',
+        responses=EventDataSerializer,
+        description='Returns yandex today\'s calendar events',
+        tags=['planning'],
     )
     def get(self, request):
         principal = get_caldav_principal(request)
+
+        today = datetime.datetime.utcnow().date()
+        start = datetime.datetime(today.year, today.month, today.day, tzinfo=tz.tzlocal())
+        end = start + timedelta(1)
 
         try:
             calendars = principal.calendars()
         except NotFoundError:
             return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
         response = {}
-        date = str(datetime.date.today())
+
         for calendar in calendars:
-            for raw_event in calendar.events():
+            for raw_event in calendar.search(comp_class=CalEvent, start=start, end=end):
                 event_info = {}
                 event = raw_event.vobject_instance.vevent
 
-                if date not in str(event.dtstart.value):
-                     continue
                 event_info['title'] = str(event.summary.value)
                 try:
-                    description = " ".join(str(event.description.value).replace('\n', ' ').split())
-                    event_info['description'] = description
+                    event_info['description'] = str(event.description.value)
                 except AttributeError:
                     event_info['description'] = None
                 event_info['start_time'] = str(event.dtstart.value)
@@ -83,13 +90,78 @@ class YandexCalendarEventsView(APIView):
 
                 response[str(event.uid.value)] = event_info
 
-        return Response(response, status=status.HTTP_200_OK)\
-            if len(response) > 0\
+                response = dict(sorted(response.items(), key=lambda item: item[1]['start_time'].split(' ')[1]))
+
+        return Response(response, status=status.HTTP_200_OK) \
+            if len(response) > 0 \
             else Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        request=EventCreationSerializer,
+        summary='Add new event',
+        description='Takes calendar\'s data, creates new event to yandex calendar',
+        tags=['planning'],
+    )
+    def post(self, request):
+        def get_rrule_string(rrule):
+            try:
+                until_date = datetime.datetime.fromisoformat(rrule['until'])
+                rrule['until'] = f'{until_date.year}' \
+                                 f'{0 if until_date.month < 10 else ""}' \
+                                 f'{until_date.month}' \
+                                 f'{0 if until_date.day < 10 else ""}' \
+                                 f'{until_date.day}'
+            except KeyError:
+                pass
+            rule_list = [f'{x[0].upper().replace("_", "")}={x[1].upper()}' for x in rrule.items() if x[1]]
+            return ';'.join(rule_list)
+
+        principal = get_caldav_principal(request)
+
+        try:
+            calendar = principal.calendars()[0]
+        except NotFoundError:
+            return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
+
+        event = ICalEvent()
+        try:
+            event['summary'] = request.data['title'] if request.data['title'] else 'Без названия'
+        except KeyError:
+            return Response('Could not find \'title\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['dtstart'] = vDatetime(datetime.datetime.fromisoformat(request.data['start_time']))
+        except KeyError:
+            return Response('Could not find \'start_time\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['dtend'] = vDatetime(datetime.datetime.fromisoformat(request.data['end_time']))
+        except KeyError:
+            return Response('Could not find \'end_time\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['description'] = request.data['description']
+        except KeyError:
+            pass
+
+        try:
+            event['rrule'] = get_rrule_string(request.data['rrule'])
+        except KeyError:
+            pass
+
+        try:
+            event['x-telemost-required'] = request.data['create_conference']
+        except KeyError:
+            return Response('Could not find \'create_conference\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        calendar.add_event(ical=event.to_ical())
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class AtlassianJiraIssuesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
         summary='Get Jira issues',
         responses=IssueDataSerializer,
@@ -97,41 +169,6 @@ class AtlassianJiraIssuesView(APIView):
         tags=['planning'],
     )
     def get(self, request):
-        def return_issues_data_from_jira():
-            accessible_resource = 'https://api.atlassian.com/oauth/token/accessible-resources'
-            base_url = 'https://api.atlassian.com/ex/jira/'
-            access_token = request.user.provider_tokens.get(provider='atlassian').access_token
-            headers = {'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'}
-
-            rq = requests.get(url=accessible_resource, headers=headers)
-            if rq.status_code == 200:
-                cloud_id = rq.json()[0]['id']
-            else:
-                return Response(rq.json(), status=rq.status_code)
-
-            search_url = f"{base_url}{cloud_id}/rest/api/3/"
-            rq = requests.get(f'{search_url}/project', headers=headers)
-            if rq.status_code == 200:
-                projects_data = rq.json()
-                projects = [project_info['key'] for project_info in projects_data if 'key' in project_info]
-            else:
-                return Response(rq.json(), status=rq.status_code)
-
-            query_of_projects = ' OR '.join([f'project="{project}"' for project in projects])
-            jql_query = f'({query_of_projects})' \
-                        f' AND assignee=currentUser()' \
-                        f' AND statusCategory IN (2, 4)' \
-
-            params = {
-                'jql': jql_query,
-                'fields': 'priority, summary, description, parent, customfield_10016',
-                'maxResults': 100000,
-            }
-            rq = requests.get(f'{search_url}/search', params=params, headers=headers)
-            if rq.status_code == 200:
-                return rq.json()
-            return Response(rq.json(), status=rq.status_code)
-
         def convert_issue_data(data):
             def return_issue_info(issue):
                 issue_info = {}
@@ -171,16 +208,37 @@ class AtlassianJiraIssuesView(APIView):
                 response_data[issue['key']] = issue_info
 
             for issue in issues:
-                if not('parent' in issue['fields'].keys()):
+                if not ('parent' in issue['fields'].keys()):
                     continue
                 issue_info = return_issue_info(issue)
                 response_data[issue['fields']['parent']['key']]['subtasks'].append(issue_info)
 
             return dict(sorted(response_data.items(), key=lambda item: item[1]['priority']['id']))
 
+        def return_issues_data_from_jira():
+            try:
+                refresh = request.user.provider_tokens.get(provider='atlassian').refresh_token
+            except ObjectDoesNotExist:
+                return Response('User does not authorized in Atlassian', status=status.HTTP_401_UNAUTHORIZED)
+
+            atlassian_user = AtlassianUserProfile(refresh, request.user)
+            query_of_projects = ' OR '.join([f'project="{project}"' for project in atlassian_user.projects])
+            jql_query = f'({query_of_projects})' \
+                        f' AND assignee=currentUser()' \
+                        f' AND statusCategory IN (2, 4)'
+            params = {
+                'jql': jql_query,
+                'fields': 'priority, summary, description, parent, customfield_10016',
+                'maxResults': 100000,
+            }
+
+            rq = requests.get(f'{atlassian_user.search_url}/search', params=params, headers=atlassian_user.headers)
+            if rq.status_code == 200:
+                return rq.json()
+            return Response(rq.json(), status=rq.status_code)
+
         data = return_issues_data_from_jira()
         if isinstance(data, Response):
             return data
 
         return Response(convert_issue_data(data), status=status.HTTP_200_OK)
-
