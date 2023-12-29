@@ -1,12 +1,15 @@
 import datetime
+from datetime import timedelta
+from dateutil import tz
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
 from drf_spectacular.utils import extend_schema
 from imaplib import IMAP4, IMAP4_SSL
-from caldav import DAVClient, Principal
+from caldav import DAVClient, Principal, Event as CalEvent
 from caldav.lib.error import NotFoundError
-from .serializers import EventDataSerializer, MailCountSerializer
+from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer
+from icalendar import vDatetime, Event as ICalEvent
 
 
 def get_caldav_principal(request_body) -> Principal:
@@ -57,23 +60,24 @@ class YandexCalendarEventsView(APIView):
     def get(self, request):
         principal = get_caldav_principal(request)
 
+        today = datetime.datetime.utcnow().date()
+        start = datetime.datetime(today.year, today.month, today.day, tzinfo=tz.tzlocal())
+        end = start + timedelta(1)
+
         try:
             calendars = principal.calendars()
         except NotFoundError:
             return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
         response = {}
-        date = str(datetime.date.today())
+
         for calendar in calendars:
-            for raw_event in calendar.events():
+            for raw_event in calendar.search(comp_class=CalEvent, start=start, end=end):
                 event_info = {}
                 event = raw_event.vobject_instance.vevent
 
-                if date not in str(event.dtstart.value):
-                     continue
                 event_info['title'] = str(event.summary.value)
                 try:
-                    description = " ".join(str(event.description.value).replace('\n', ' ').split())
-                    event_info['description'] = description
+                    event_info['description'] = str(event.description.value)
                 except AttributeError:
                     event_info['description'] = None
                 event_info['start_time'] = str(event.dtstart.value)
@@ -82,8 +86,72 @@ class YandexCalendarEventsView(APIView):
 
                 response[str(event.uid.value)] = event_info
 
+                response = dict(sorted(response.items(), key=lambda item: item[1]['start_time'].split(' ')[1]))
+
         return Response(response, status=status.HTTP_200_OK)\
             if len(response) > 0\
             else Response(status=status.HTTP_204_NO_CONTENT)
 
+
+    @extend_schema(
+        request=EventCreationSerializer,
+        summary='Add new event',
+        description='Takes calendar\'s data, creates new event to yandex calendar',
+        tags=['planning'],
+    )
+    def post(self, request):
+        def get_rrule_string(rrule):
+            try:
+                until_date = datetime.datetime.fromisoformat(rrule['until'])
+                rrule['until'] = f'{until_date.year}'\
+                                        f'{0 if until_date.month < 10 else ""}'\
+                                        f'{until_date.month}'\
+                                        f'{0 if until_date.day < 10 else ""}'\
+                                        f'{until_date.day}'
+            except KeyError:
+                pass
+            rule_list = [f'{x[0].upper().replace("_", "")}={x[1].upper()}' for x in rrule.items() if x[1]]
+            return ';'.join(rule_list)
+
+        principal = get_caldav_principal(request)
+
+        try:
+            calendar = principal.calendars()[0]
+        except NotFoundError:
+            return Response('Calendars do not exist', status=status.HTTP_404_NOT_FOUND)
+
+        event = ICalEvent()
+        try:
+            event['summary'] = request.data['title'] if request.data['title'] else 'Без названия'
+        except KeyError:
+            return Response('Could not find \'title\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['dtstart'] = vDatetime(datetime.datetime.fromisoformat(request.data['start_time']))
+        except KeyError:
+            return Response('Could not find \'start_time\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['dtend'] = vDatetime(datetime.datetime.fromisoformat(request.data['end_time']))
+        except KeyError:
+            return Response('Could not find \'end_time\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            event['description'] = request.data['description']
+        except KeyError:
+            pass
+
+        try:
+            event['rrule'] = get_rrule_string(request.data['rrule'])
+        except KeyError:
+            pass
+
+        try:
+            event['x-telemost-required'] = request.data['create_conference']
+        except KeyError:
+            return Response('Could not find \'create_conference\' in request body', status=status.HTTP_400_BAD_REQUEST)
+
+        calendar.add_event(ical=event.to_ical())
+
+        return Response(status=status.HTTP_201_CREATED)
 
