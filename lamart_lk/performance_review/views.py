@@ -26,7 +26,7 @@ class TeammatesAPIView(APIView):
 
         teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
         context = {
-            'teammates': list(teammates.values('username', 'first_name', 'last_name', 'gender', 'status_level')),
+            'teammates': list(teammates.values('id', 'username', 'first_name', 'last_name', 'gender', 'status_level')),
         }
         return Response(context, status=status.HTTP_200_OK)
 
@@ -63,16 +63,9 @@ class UserEmployeeFormsAPIView(APIView):
     def get(self, request, username):
         """Get forms by user"""
         user = User.objects.get(username=username)
+        print(user.username)
         employee_forms = EmployeeFeedbackForm.objects.filter(about=user)
-        serializer = EmployeeFormSerializer(data=employee_forms, many=True)
-        hard_skills_rate = employee_forms.aggregate(Avg('hard_skills_rate'))
-        productivity_rate = employee_forms.aggregate(Avg('productivity_rate'))
-        communication_rate = employee_forms.aggregate(Avg('communication_rate'))
-        initiative_rate = employee_forms.aggregate(Avg('initiative_rate'))
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save(hard_skills_rate=hard_skills_rate, productivity_rate=productivity_rate,
-                        communication_rate=communication_rate, initiative_rate=initiative_rate)
+        serializer = EmployeeFormSerializer(employee_forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -86,18 +79,13 @@ class TeamleadFeedbackFormAPIView(APIView):
     )
     def get(self, request, username):
         user = User.objects.get(username=username)
-        employee_forms = EmployeeFeedbackForm.objects.filter(about=user)
+        employee_forms = EmployeeFeedbackForm.objects.filter(about=user.id)
         teamlead_form = TeamLeadFeedbackForm.objects.get(about=user)
-        serializer = EmployeeFormSerializer(data=employee_forms, many=True)
-        hard_skills_rate = (employee_forms.aggregate(Avg('hard_skills_rate')) + teamlead_form.hard_skills_rate) / 2
-        productivity_rate = (employee_forms.aggregate(Avg('productivity_rate')) + teamlead_form.hard_skills_rate) / 2
-        communication_rate = (employee_forms.aggregate(Avg('communication_rate')) + teamlead_form.hard_skills_rate) / 2
-        initiative_rate = (employee_forms.aggregate(Avg('initiative_rate')) + teamlead_form.hard_skills_rate) / 2
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save(hard_skills_rate=hard_skills_rate, productivity_rate=productivity_rate,
-                        communication_rate=communication_rate, initiative_rate=initiative_rate,
-                        created_by=teamlead_form.created_by, feedback_date=teamlead_form.feedback_date)
+        serializer = TeamleadFormSerializer(teamlead_form)
+        # hard_skills_rate = (employee_forms.aggregate(Avg('hard_skills_rate')) + teamlead_form.hard_skills_rate) / 2
+        # productivity_rate = (employee_forms.aggregate(Avg('productivity_rate')) + teamlead_form.hard_skills_rate) / 2
+        # communication_rate = (employee_forms.aggregate(Avg('communication_rate')) + teamlead_form.hard_skills_rate) / 2
+        # initiative_rate = (employee_forms.aggregate(Avg('initiative_rate')) + teamlead_form.hard_skills_rate) / 2
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
