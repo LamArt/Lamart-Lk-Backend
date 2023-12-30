@@ -20,7 +20,7 @@ class SalaryView(APIView):
         examples=[
             OpenApiExample(
                 "Example of salary data response.",
-                value={"total_salary": 6500,
+                value={"total_salary": 6250,
                        'projects': {
                            "VMS": {
                                "role": "Backend-developer",
