@@ -15,9 +15,10 @@ class AtlassianUserProfile:
         self.headers = {'Authorization': f'Bearer {new_access_token}',
                         'Accept': 'application/json'}
         self.search_url = f"{self.BASE_URL}{self.get_cloud_id()}/rest/api/3/"
+        self.email = self.get_email()
         atlassian_provider.save_tokens({'refresh': new_refresh_token,
                                         'access': new_access_token}, atlassian_provider.data['expires_in'],
-                                       self.user, 'atlassian', 'lamart')
+                                       self.user, 'atlassian', 'lamart', self.email)
 
     def get_cloud_id(self):
         """Get identifier of user to api requests"""
@@ -34,12 +35,13 @@ class AtlassianUserProfile:
             data = rq.json()
             return data['emailAddress']
 
-    def take_tasks(self, projects, created_type):
+    def take_tasks(self, projects, created_type, email=None):
         """Make request to jira api with JQL, return data of projects"""
-
         query_of_projects = ' OR '.join([f'project={project}' for project in projects])
-        email = self.get_email()
-        jql_query = f'({query_of_projects}) AND created>={created_type} AND assignee="{email}" AND status IN ("DONE", "НА ПРОВЕРКЕ")'
+        assignee = ''
+        if email is not None:
+            assignee = f'AND assignee="{email}"'
+        jql_query = f'({query_of_projects}) AND created>={created_type} {assignee} AND status IN ("DONE", "НА ПРОВЕРКЕ")'
         params = {
             'jql': jql_query,
             'fields': 'customfield_10016,created',

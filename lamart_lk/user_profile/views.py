@@ -18,6 +18,7 @@ class ProfileData(APIView):
     )
     def get(self, request):
         """Gives logged user profile data"""
+        teams = [team.name for team in request.user.teams.all()]
         data = {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
@@ -26,9 +27,8 @@ class ProfileData(APIView):
             'phone': request.user.phone,
             'email': request.user.email,
             'avatar_url': request.user.avatar_url,
-            'is_team_lead': request.user.is_team_lead,
             'gender': request.user.gender,
-            'team': request.user.team.name,
+            'teams': teams,
             'id': request.user.pk
         }
         return Response(data, status=status.HTTP_200_OK)

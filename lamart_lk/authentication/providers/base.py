@@ -58,8 +58,9 @@ class BaseProvider(ProviderFactory):
             self.data_params = None
 
     @staticmethod
-    def save_tokens(tokens, expires_in, user, provider_name, organisation):
+    def save_tokens(tokens, expires_in, user, provider_name, organisation, email=None):
         try:
+            user_provider_email = email if email is not None else user.email
             provider_token, created = ProviderToken.objects.update_or_create(
                 user=user,
                 provider=provider_name,
@@ -67,7 +68,8 @@ class BaseProvider(ProviderFactory):
                 defaults={
                     'access_token': tokens['access'],
                     'refresh_token': tokens['refresh'],
-                    'expires_in': expires_in
+                    'expires_in': expires_in,
+                    'user_provider_email': user_provider_email
                 }
             )
             return provider_token
