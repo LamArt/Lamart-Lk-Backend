@@ -63,14 +63,11 @@ class StatisticsStoryPointsView(APIView):
         examples=[
             OpenApiExample(
                 "Example of statistics data response.",
-                value={"VMS": {
-                    "December": 14
+                value={
+                    "December": 20,
+                    "November": 15,
+                    "October": 10
                 },
-                    "Radar": {
-                        "December": 20,
-                        "November": 15,
-                        "October": 10
-                    }, },
                 request_only=False,
                 response_only=True,
             ),
