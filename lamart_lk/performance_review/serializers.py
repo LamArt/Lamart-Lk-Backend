@@ -8,7 +8,7 @@ from .models import *
 class EmployeeFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeFeedbackForm
-        exclude = ['created_by', 'feedback_date']
+        exclude = ['feedback_date']
 
 
 class TeamleadFormSerializer(serializers.ModelSerializer):

@@ -37,7 +37,7 @@ class EmployeeFormAPIView(APIView):
 
     @extend_schema(
         request=EmployeeFormSerializer,
-        summary='Get user teammates',
+        summary='Create employee form',
         tags=['review'],
     )
     def post(self, request):
@@ -103,3 +103,17 @@ class TeamleadFeedbackFormAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except User.DoesNotExist:
             return Response(f"user {request.data['about']} does not exist", status=status.HTTP_400_BAD_REQUEST)
+
+
+class TeamLeadFormsAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary='Get teamlead forms, created by requested user',
+        tags=['review'],
+    )
+    def get(self, request):
+        user = User.objects.get(id=request.user.id)
+        forms = TeamLeadFeedbackForm.objects.filter(created_by=user)
+        serializer = TeamleadFormSerializer(forms, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
