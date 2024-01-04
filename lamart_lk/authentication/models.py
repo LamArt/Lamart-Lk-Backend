@@ -40,7 +40,7 @@ class Team(models.Model):
     name = models.CharField(max_length=50)
     jira_key = models.CharField(max_length=20)
     rate = models.PositiveIntegerField(null=False, blank=False)
-    team_lead = models.ForeignKey(User, on_delete=models.CASCADE, related_name='team_lead',
+    team_lead = models.ForeignKey(User, on_delete=models.CASCADE, related_name='team_lead_in',
                                   blank=False, null=True)
 
     def __str__(self):

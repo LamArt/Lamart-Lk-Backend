@@ -66,7 +66,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager, TeamMember
 
             is_team_lead = project_info.get('is_team_lead', False)
 
-            if is_team_lead == self.user:
+            if self.user == is_team_lead:
                 salary_team_lead = self.count_salary_for_team_leader_by_project(project_info, 'startOfMonth()')
                 project_salary = salary_team_lead['salary']
             else:
@@ -112,7 +112,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager, TeamMember
         for project_name, project_info in projects_data.items():
             is_team_lead = project_info.get('is_team_lead', False)
 
-            if is_team_lead == self.user:
+            if self.user == is_team_lead:
                 teammates_data = TeamMembersService.get_atlassian_teammates_by_project_key(project_info['jira_key'])
                 for teammate in teammates_data:
                     issue_data = self.take_tasks([project_info['jira_key']], 'startOfMonth(-12M)',
@@ -124,5 +124,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager, TeamMember
                 if issue_data is not None:
                     process_issue_data(issue_data, self.user)
 
-        result = dict(sorted(time_data.items()))
+        result = dict(sorted(time_data.items(), key=lambda x: (
+            datetime.strptime(x[0], '%B').month == self.current_date.month, datetime.strptime(x[0], '%B').month),
+                             reverse=True))
         return result
