@@ -38,7 +38,7 @@ class TestAtlassianUserProfile(unittest.TestCase):
         self.assertEqual(email, 'fake@ya.ru')
 
     @patch('salary.utils.profile.AtlassianUserProfile.get_email', return_value='fake@ya.ru')
-    def test_created_tasks(self, mock_get_email):
+    def test_take_tasks(self, mock_get_email):
         projects = ['TEST-1', 'TEST-2', 'TEST-3']
         email = self.atlassian_profile.get_email()
 
@@ -55,7 +55,7 @@ class TestAtlassianUserProfile(unittest.TestCase):
         mock_response.status_code = 200
 
         with patch('salary.utils.profile.requests.get', return_value=mock_response) as mock_get:
-            tasks = self.atlassian_profile.take_tasks(projects, created_type='2023-12-12')
+            tasks = self.atlassian_profile.take_tasks(projects, created_type='2023-12-12', email=email)
             jql_query = f'(project=TEST-1 OR project=TEST-2 OR project=TEST-3) AND created>=2023-12-12 AND assignee="{email}" AND status IN ("DONE", "НА ПРОВЕРКЕ")'
 
             mock_get.assert_called_once_with(
