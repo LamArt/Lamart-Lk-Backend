@@ -30,6 +30,14 @@ class SalaryView(APIView):
                                "reward": 5000,
                                "credit": 2000
                            },
+                           "Lamart LK": {
+                               "role": "TeamLead",
+                               'story_points': 80,
+                               "rate": 650,
+                               "salary": 10000,
+                               "reward": 3000,
+                               "credit": 0
+                           },
                        },
                        },
                 request_only=False,
