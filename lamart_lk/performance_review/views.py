@@ -63,7 +63,6 @@ class UserEmployeeFormsAPIView(APIView):
     def get(self, request, username):
         """Get forms by user"""
         user = User.objects.get(username=username)
-        print(user.username)
         employee_forms = EmployeeFeedbackForm.objects.filter(about=user)
         serializer = EmployeeFormSerializer(employee_forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -82,10 +81,6 @@ class TeamleadFeedbackFormAPIView(APIView):
         employee_forms = EmployeeFeedbackForm.objects.filter(about=user.id)
         teamlead_form = TeamLeadFeedbackForm.objects.get(about=user)
         serializer = TeamleadFormSerializer(teamlead_form)
-        # hard_skills_rate = (employee_forms.aggregate(Avg('hard_skills_rate')) + teamlead_form.hard_skills_rate) / 2
-        # productivity_rate = (employee_forms.aggregate(Avg('productivity_rate')) + teamlead_form.hard_skills_rate) / 2
-        # communication_rate = (employee_forms.aggregate(Avg('communication_rate')) + teamlead_form.hard_skills_rate) / 2
-        # initiative_rate = (employee_forms.aggregate(Avg('initiative_rate')) + teamlead_form.hard_skills_rate) / 2
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
@@ -113,7 +108,8 @@ class TeamLeadFormsAPIView(APIView):
         tags=['review'],
     )
     def get(self, request):
-        user = User.objects.get(id=request.user.id)
-        forms = TeamLeadFeedbackForm.objects.filter(created_by=user)
+        if not request.user.is_team_lead:
+            return Response("User is not Team lead", status=status.HTTP_403_FORBIDDEN)
+        forms = TeamLeadFeedbackForm.objects.filter(created_by=request.user)
         serializer = TeamleadFormSerializer(forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
