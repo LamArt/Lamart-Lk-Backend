@@ -14,7 +14,7 @@ class ProfileData(APIView):
 
     @extend_schema(
         responses=inline_serializer(
-            name="SuccessfulResponseSalary",
+            name="SuccessfulResponseGetProfile",
             fields={"example": serializers.CharField()},
         ),
         examples=[
@@ -55,7 +55,6 @@ class ProfileData(APIView):
         tags=['profile'],
     )
     def get(self, request):
-        """Gives logged user profile data"""
         teams = {team.name: {'is_team_lead': team.team_lead == request.user, 'team_id': team.id}
                  for team in request.user.teams.all()}
         data = {
@@ -72,14 +71,14 @@ class ProfileData(APIView):
         }
         return Response(data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        responses={201: 'created', 400: 'bad request', 403: 'forbidden'},
-        query_serializer=ProfileSerializer,
-        operation_id='Update profile',
-        tags=['PROFILE'],
+    @extend_schema(
+        summary="Update profile",
+        description="Takes new data and returns updated profile data",
+        tags=["profile"],
+        request=ProfileSerializer,
+        operation_id="Update profile",
     )
     def put(self, request):
-        """Takes new data returns updated profile data"""
         serialiser = ProfileSerializer(request.user, data=request.data)
         if serialiser.is_valid():
             serialiser.save()
