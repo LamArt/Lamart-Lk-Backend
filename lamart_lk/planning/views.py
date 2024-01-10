@@ -11,8 +11,9 @@ from caldav import DAVClient, Principal, Event as CalEvent
 from caldav.lib.error import NotFoundError
 from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer, IssueDataSerializer
 from icalendar import vDatetime, Event as ICalEvent
-from salary.utils.profile import AtlassianUserProfile
+from salary.utils.salary import SalaryStoryPoints
 from django.db.models import ObjectDoesNotExist
+
 
 def get_caldav_principal(request_body) -> Principal:
     username = request_body.user.email
@@ -221,8 +222,9 @@ class AtlassianJiraIssuesView(APIView):
             except ObjectDoesNotExist:
                 return Response('User does not authorized in Atlassian', status=status.HTTP_401_UNAUTHORIZED)
 
-            atlassian_user = AtlassianUserProfile(refresh, request.user)
-            query_of_projects = ' OR '.join([f'project="{project}"' for project in atlassian_user.projects])
+            atlassian_user = SalaryStoryPoints(refresh, request.user)
+            query_of_projects = ' OR '.join(
+                [f'project="{project}"' for project in atlassian_user.project_manager.get_jira_keys()])
             jql_query = f'({query_of_projects})' \
                         f' AND assignee=currentUser()' \
                         f' AND statusCategory IN (2, 4)'
