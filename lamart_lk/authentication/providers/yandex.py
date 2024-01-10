@@ -44,9 +44,17 @@ class YandexProvider(AuthProvider):
             )
             return new_user[0]
         except TypeError:
-                new_user = User.objects.filter(username=self.data['default_email']).update_or_create(
-                    phone=self.data['default_phone']
-                )
-                return new_user[0]
+            new_user = User.objects.filter(username=self.data['default_email']).update_or_create(
+                username=self.data['default_email'],
+                password=self.token,
+                first_name=self.data['first_name'],
+                last_name=self.data['last_name'],
+                avatar_url=self.data['default_avatar_id'],
+                birthday=self.data['birthday'],
+                email=self.data['default_email'],
+                gender=self.data['sex'],
+                phone=self.data['default_phone']
+            )
+            return new_user[0]
         except KeyError:
             raise 'error in getting user'
