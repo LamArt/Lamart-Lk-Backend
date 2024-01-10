@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from .serializers import *
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample
 
 User = get_user_model()
 
@@ -11,14 +12,52 @@ User = get_user_model()
 class ProfileData(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
-        responses={200: 'ok', 403: 'forbidden'},
-        operation_id='Get profile',
-        tags=['PROFILE'],
+    @extend_schema(
+        responses=inline_serializer(
+            name="SuccessfulResponseSalary",
+            fields={"example": serializers.CharField()},
+        ),
+        examples=[
+            OpenApiExample(
+                "Example of user profile.",
+                value={
+                    "first_name": "Иван",
+                    "last_name": "Иванов",
+                    "surname": 'null',
+                    "username": "IvanovIvan@yandex.ru",
+                    "phone": "+77786543123",
+                    "email": "IvanovIvan@yandex.ru",
+                    "avatar_url": "65952/xXXyX0XXxx1uXXssAmcCzcJ4Fk-1",
+                    "gender": 'null',
+                    "teams": {
+                        "Test": {
+                            "is_team_lead": 'false',
+                            'team_id': '3'
+                        },
+                        "VMS": {
+                            "is_team_lead": 'false',
+                            'team_id': '5'
+                        },
+                        "LK": {
+                            "is_team_lead": 'true',
+                            'team_id': '1'
+                        }
+                    },
+                    "id": 10
+
+                },
+                request_only=False,
+                response_only=True,
+            ),
+        ],
+        summary='Get profile data',
+        description='Get profile data for logged user',
+        tags=['profile'],
     )
     def get(self, request):
         """Gives logged user profile data"""
-        teams = [team.name for team in request.user.teams.all()]
+        teams = {team.name: {'is_team_lead': team.team_lead == request.user, 'team_id': team.id}
+                 for team in request.user.teams.all()}
         data = {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
