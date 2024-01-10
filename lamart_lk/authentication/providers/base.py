@@ -1,7 +1,7 @@
-import requests
 from abc import ABC, abstractmethod
 from django.contrib.auth import get_user_model
 
+from local_settings import *
 from authentication.models import ProviderToken
 
 User = get_user_model()
@@ -27,14 +27,15 @@ class ProviderFactory:
                 'key': 'Authorization',
                 'value': 'Bearer'
             },
-            'data_params': {
-                'client_id': 'OFe6NSNJiBJypHiGeEMinCsohVPFfXAV',
-                'client_secret': 'ATOAfeVYlgQVJPi7CNSkvAtPLvymr6Uyw4foeBjC1-iZorQUFDn7TvO6r_58KArFSn4h4EE5A385',
-                'redirect_uri': 'http://localhost:5004/salary'
-            }
+                'data_params': OAUTH_APPS['ATLASSIAN'] # defined in local_settings
+                # examle OAUTH_APPS = {
+                #             'ATLASSIAN': {
+                #                   'client_id': '12345678',
+                #                   'client_secret': '1234567890',
+                #                   'redirect_uri': 'http://localhost' }}
         }
     }
-
+    
     @classmethod
     def get_provider(cls, provider_name):
         provider = cls.PROVIDERS.get(provider_name)
