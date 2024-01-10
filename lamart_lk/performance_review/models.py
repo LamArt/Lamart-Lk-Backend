@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from salary.models import Team
+
 
 class TeamLeadFeedbackForm(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
@@ -8,6 +10,8 @@ class TeamLeadFeedbackForm(models.Model):
     about = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
                               related_name='teamlead_forms_about',
                               blank=False)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="employee_team_for_teamlead",
+                             blank=False)
     feedback_date = models.DateField(null=True, blank=True)
 
     strengths = models.TextField(verbose_name='Сильные стороны')
@@ -31,7 +35,7 @@ class EmployeeFeedbackForm(models.Model):
     about = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
                               related_name='employee_forms_about',
                               blank=False)
-    team = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_team",
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="employee_team_employee",
                              blank=False)
 
     feedback_date = models.DateField(null=True, blank=True)
