@@ -1,6 +1,7 @@
 import datetime
 from datetime import timedelta
 from dateutil import tz
+import requests
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions
@@ -8,9 +9,10 @@ from drf_spectacular.utils import extend_schema
 from imaplib import IMAP4, IMAP4_SSL
 from caldav import DAVClient, Principal, Event as CalEvent
 from caldav.lib.error import NotFoundError
-from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer
+from .serializers import EventDataSerializer, MailCountSerializer, EventCreationSerializer, IssueDataSerializer
 from icalendar import vDatetime, Event as ICalEvent
-
+from salary.utils.profile import AtlassianUserProfile
+from django.db.models import ObjectDoesNotExist
 
 def get_caldav_principal(request_body) -> Principal:
     username = request_body.user.email
@@ -24,11 +26,12 @@ def get_caldav_principal(request_body) -> Principal:
 
 class YandexUnreadMailCountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
-    summary='Get mail count',
-    responses=MailCountSerializer,
-    description='Returns yandex unread mails count',
-    tags=['planning'],
+        summary='Get mail count',
+        responses=MailCountSerializer,
+        description='Returns yandex unread mails count',
+        tags=['planning'],
     )
     def get(self, request):
         username = request.user.email
@@ -51,11 +54,12 @@ class YandexUnreadMailCountView(APIView):
 
 class YandexCalendarEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
-    summary='Get today\'s events',
-    responses=EventDataSerializer,
-    description='Returns yandex today\'s calendar events',
-    tags=['planning'],
+        summary='Get today\'s events',
+        responses=EventDataSerializer,
+        description='Returns yandex today\'s calendar events',
+        tags=['planning'],
     )
     def get(self, request):
         principal = get_caldav_principal(request)
@@ -88,10 +92,9 @@ class YandexCalendarEventsView(APIView):
 
                 response = dict(sorted(response.items(), key=lambda item: item[1]['start_time'].split(' ')[1]))
 
-        return Response(response, status=status.HTTP_200_OK)\
-            if len(response) > 0\
+        return Response(response, status=status.HTTP_200_OK) \
+            if len(response) > 0 \
             else Response(status=status.HTTP_204_NO_CONTENT)
-
 
     @extend_schema(
         request=EventCreationSerializer,
@@ -103,11 +106,11 @@ class YandexCalendarEventsView(APIView):
         def get_rrule_string(rrule):
             try:
                 until_date = datetime.datetime.fromisoformat(rrule['until'])
-                rrule['until'] = f'{until_date.year}'\
-                                        f'{0 if until_date.month < 10 else ""}'\
-                                        f'{until_date.month}'\
-                                        f'{0 if until_date.day < 10 else ""}'\
-                                        f'{until_date.day}'
+                rrule['until'] = f'{until_date.year}' \
+                                 f'{0 if until_date.month < 10 else ""}' \
+                                 f'{until_date.month}' \
+                                 f'{0 if until_date.day < 10 else ""}' \
+                                 f'{until_date.day}'
             except KeyError:
                 pass
             rule_list = [f'{x[0].upper().replace("_", "")}={x[1].upper()}' for x in rrule.items() if x[1]]
@@ -155,3 +158,87 @@ class YandexCalendarEventsView(APIView):
 
         return Response(status=status.HTTP_201_CREATED)
 
+
+class AtlassianJiraIssuesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary='Get Jira issues',
+        responses=IssueDataSerializer,
+        description='Returns uncompleted Jira issues sorted by priority',
+        tags=['planning'],
+    )
+    def get(self, request):
+        def convert_issue_data(data):
+            def return_issue_info(issue):
+                issue_info = {}
+                issue_info['title'] = issue['fields']['summary']
+                issue_info['priority'] = {
+                    'name': issue['fields']['priority']['name'],
+                    'id': str(issue['fields']['priority']['id'])
+                }
+                issue_info['story_points'] = issue['fields']['customfield_10016']
+
+                if not (issue['fields']['description']):
+                    issue_info['description'] = None
+                else:
+                    all_text = []
+                    for content in issue['fields']['description']['content']:
+                        all_content_text = []
+                        for sub_content in content['content']:
+                            try:
+                                all_text.append(sub_content['text'])
+                            except KeyError:
+                                issue_info['description'] = None
+                                return issue_info
+
+                        all_text.append(' '.join(all_content_text))
+                        all_content_text.clear()
+                    issue_info['description'] = '\r\n'.join(all_text)
+
+                return issue_info
+
+            response_data = {}
+            issues = data['issues']
+            for issue in issues:
+                if 'parent' in issue['fields'].keys():
+                    continue
+                issue_info = return_issue_info(issue)
+                issue_info['subtasks'] = []
+                response_data[issue['key']] = issue_info
+
+            for issue in issues:
+                if not ('parent' in issue['fields'].keys()):
+                    continue
+                issue_info = return_issue_info(issue)
+                response_data[issue['fields']['parent']['key']]['subtasks'].append(issue_info)
+
+            return dict(sorted(response_data.items(), key=lambda item: item[1]['priority']['id']))
+
+        def return_issues_data_from_jira():
+            try:
+                refresh = request.user.provider_tokens.get(provider='atlassian').refresh_token
+            except ObjectDoesNotExist:
+                return Response('User does not authorized in Atlassian', status=status.HTTP_401_UNAUTHORIZED)
+
+            atlassian_user = AtlassianUserProfile(refresh, request.user)
+            query_of_projects = ' OR '.join([f'project="{project}"' for project in atlassian_user.projects])
+            jql_query = f'({query_of_projects})' \
+                        f' AND assignee=currentUser()' \
+                        f' AND statusCategory IN (2, 4)'
+            params = {
+                'jql': jql_query,
+                'fields': 'priority, summary, description, parent, customfield_10016',
+                'maxResults': 100000,
+            }
+
+            rq = requests.get(f'{atlassian_user.search_url}/search', params=params, headers=atlassian_user.headers)
+            if rq.status_code == 200:
+                return rq.json()
+            return Response(rq.json(), status=rq.status_code)
+
+        data = return_issues_data_from_jira()
+        if isinstance(data, Response):
+            return data
+
+        return Response(convert_issue_data(data), status=status.HTTP_200_OK)
