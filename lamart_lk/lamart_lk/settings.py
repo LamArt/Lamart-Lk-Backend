@@ -1,8 +1,8 @@
 from local_settings import *
 from datetime import timedelta
 from pathlib import Path
+from lamart_lk.env import env
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = SECRET_KEY # define django SECRET_KEY in local_settings
 DEBUG = True
 ALLOWED_HOSTS = ['*']
@@ -108,16 +108,12 @@ SWAGGER_SETTINGS = {
 }
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'test_db',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'db',
+        'NAME': env('POSTGRES_DB'),
+        'USER': env('POSTGRES_USER'),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
+        'HOST': env('POSTGRES_HOST'),
         'PORT': '5432'
     }
 }
