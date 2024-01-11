@@ -1,5 +1,6 @@
 from django.contrib import admin
 
-from salary.models import Salary
+from salary.models import Role, TeamMember
 
-admin.site.register(Salary)
+admin.site.register(Role)
+admin.site.register(TeamMember)

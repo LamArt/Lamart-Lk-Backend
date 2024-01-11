@@ -3,3 +3,4 @@ from .models import *
 
 admin.site.register(User)
 admin.site.register(ProviderToken)
+admin.site.register(Team)

@@ -11,6 +11,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 
 class ExchangeProviderTokenView(APIView):
     serializer_class = ProviderSerializer
+    authentication_classes = []
 
     auth_providers = {
         'yandex': YandexProvider,
