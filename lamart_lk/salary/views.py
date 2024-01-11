@@ -6,38 +6,13 @@ from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiRespo
 
 from authentication.models import ProviderToken
 from salary.serializers import SalarySerializer
-from salary.story_points.utils import StoryPoints
+from salary.utils.story_points import StoryPoints
 from salary.models import Salary
 
 
 class SalaryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SalarySerializer
-
-    @extend_schema(
-        responses={
-            201: OpenApiResponse(description="Successful update"),
-            400: OpenApiResponse(description="Request error"),
-            403: OpenApiResponse(description="Forbidden request, only for admins"),
-            404: OpenApiResponse(description="User salary not found")
-        },
-        summary='Update salary info',
-        description='Update salary info ONLY BY ADMIN (user stuff_status=True)',
-        tags=['salary'],
-    )
-    def put(self, request):
-        if not request.user.is_staff:
-            return Response('Forbidden request, only for admins', status=status.HTTP_403_FORBIDDEN)
-
-        user_salary = Salary.get_salary_data(request.user)
-        if user_salary is None:
-            return Response('User salary information not found', status=status.HTTP_404_NOT_FOUND)
-
-        serializer = SalarySerializer(user_salary, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response('Updated successfully', status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
         responses={200: inline_serializer(
@@ -60,9 +35,8 @@ class SalaryView(APIView):
             user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
-        except IndexError:
-            return Response("Your type of authorization can't take story points. You need to authorize REST API Jira",
-                            status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
         user_salary = Salary.get_salary_data(request.user)
         if user_salary is None:
@@ -86,12 +60,13 @@ class StatisticsStoryPointsView(APIView):
         responses={200: inline_serializer(
             name='SuccessfulGetStatistics',
             fields={
-                'weeks': serializers.DictField(),
-                'months': serializers.DictField(),
+                'month1': serializers.IntegerField(),
+                'month2': serializers.IntegerField(),
+                'month3': serializers.IntegerField(),
             }
         )},
-        summary='Get story points data for graph',
-        description='Return story points for last 10 months',
+        summary='Get story points for statistic graph',
+        description='Return story points for last 12 months',
         tags=['salary'],
     )
     def get(self, request):
@@ -100,5 +75,7 @@ class StatisticsStoryPointsView(APIView):
             user_story_points = StoryPoints(atlassian_tokens.refresh_token, request.user)
         except ProviderToken.DoesNotExist:
             return Response('Jira not connected', status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response('Unauthorized, make jira authentication again', status=status.HTTP_401_UNAUTHORIZED)
 
         return Response(user_story_points.count_by_months(), status=status.HTTP_200_OK)

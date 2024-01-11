@@ -2,7 +2,7 @@ from collections import defaultdict
 import requests
 from datetime import datetime, timedelta
 
-from authentication.providers.atlassian import AtlassianUserProfile
+from salary.utils.profile import AtlassianUserProfile
 
 
 class StoryPoints(AtlassianUserProfile):
@@ -23,10 +23,10 @@ class StoryPoints(AtlassianUserProfile):
         return total
 
     def count_by_months(self):
-        """Counter sp for the last 10 months"""
+        """Counter sp for the last 12 months"""
 
         time_delta = 10 * 4
-        issue_data = self.take_tasks('startOfMonth(-10M)')
+        issue_data = self.take_tasks('startOfMonth(-12M)')
         time_data = defaultdict(int)
         if issue_data is None:
             return {}
