@@ -16,3 +16,16 @@ class TeamleadFormSerializer(serializers.ModelSerializer):
         model = TeamLeadFeedbackForm
         exclude = ['created_by', 'feedback_date', 'manager_approve']
 
+class PerformanceReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PerformanceReview
+        fields = '__all__'
+
+    def update(self, instance, validated_data):
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
+
+
