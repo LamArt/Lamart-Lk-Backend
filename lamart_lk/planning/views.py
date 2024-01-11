@@ -241,6 +241,9 @@ class AtlassianJiraIssuesView(APIView):
             atlassian_user = SalaryStoryPoints(refresh, request.user)
             query_of_projects = ' OR '.join(
                 [f'project="{project}"' for project in atlassian_user.project_manager.get_jira_keys()])
+            if not query_of_projects:
+                return Response('User does not belong to any team', status=status.HTTP_404_NOT_FOUND)
+
             jql_query = f'({query_of_projects})' \
                         f' AND assignee=currentUser()' \
                         f' AND statusCategory IN (2, 4)'
