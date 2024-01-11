@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.db import models
 
+class PerformanceReview(models.Model):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='performance_review')
+    created_at = models.DateTimeField(auto_now_add=True)
+    stage = models.IntegerField(default=1)
 
 class TeamLeadFeedbackForm(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE,
@@ -23,6 +27,7 @@ class TeamLeadFeedbackForm(models.Model):
     stress_resistance_rate = models.IntegerField(null=True)
 
     manager_approve = models.BooleanField(default=False)
+    performance_review = models.ForeignKey(PerformanceReview, null=True, on_delete=models.CASCADE, related_name="teamlead_form")
 
 
 class EmployeeFeedbackForm(models.Model):
@@ -44,6 +49,8 @@ class EmployeeFeedbackForm(models.Model):
     productivity_rate = models.IntegerField()
     communication_rate = models.IntegerField()
     initiative_rate = models.IntegerField()
+    performance_review = models.ForeignKey(PerformanceReview, null=True, on_delete=models.CASCADE, related_name="employee_form")
+
 
 
 class Team(models.Model):

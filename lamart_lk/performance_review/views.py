@@ -113,3 +113,49 @@ class TeamLeadFormsAPIView(APIView):
         forms = TeamLeadFeedbackForm.objects.filter(created_by=request.user)
         serializer = TeamleadFormSerializer(forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PerfomanceReviewAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary='Get last created perfomance_review',
+        tags=['review']
+    )
+    def get(self, request):
+        try:
+            last_perfomance_review = PerformanceReview.objects.last()
+        except:
+            return Response("No perfomance_review found", status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PerformanceReviewSerializer(last_perfomance_review)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=PerformanceReviewSerializer,
+        summary='Create perfomance review',
+        tags=['review']
+    )
+    def post(self, request):
+        serializer = PerformanceReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        request=PerformanceReviewSerializer,
+        summary='Update perfomance review',
+        tags=['review']
+    )
+    def patch(self, request):
+        try:
+            last_perfomance_review = PerformanceReview.objects.last()
+        except:
+            return Response("No perfomance_review found", status=status.HTTP_404_NOT_FOUND)
+        serializer = PerformanceReviewSerializer(last_perfomance_review, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data="wrong parameters", status=status.HTTP_400_BAD_REQUEST)
+
