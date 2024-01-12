@@ -4,14 +4,17 @@
 
 ## Deploy
 
-create virtual environment from requirements.txt
-
-powershell:
-`cd lamart_lk`
-`python manage.py migrate`
-`python manage.py createsuperuser`
-`python manage.py runserver`
-done!
+1) clone from git
+2) switch to dev
+3) create, active venv
+4) create .env and local_settings.py
+5) в .env поменять POSTGRES_HOST="db" на "localhost"
+6) open docker dekctop
+7) in terminal: `docker-compose up --build -d`
+7) `cd lamart_lk` `python manage.py makemigrations` `python manage.py migrate`
+8) создать админа, если надо
+9) вернуть db в шаге 5
+10) `docker-compose up --build`
 
 ## Docs
 
