@@ -65,6 +65,7 @@ class TeammatesAPIView(APIView):
         return Response(context, status=status.HTTP_200_OK)
 
 
+
 class EmployeeFormAPIView(APIView):
     """Creating a new employee form"""
     permission_classes = [permissions.IsAuthenticated]
@@ -99,6 +100,19 @@ class UserEmployeeFormsAPIView(APIView):
         user = User.objects.get(username=username)
         employee_forms = EmployeeFeedbackForm.objects.filter(about=user)
         serializer = EmployeeFormSerializer(employee_forms, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FormsAboutTeammatesAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary='Get self forms about teammates',
+        tags=['review']
+    )
+    def get(self, request):
+        teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
+        forms = EmployeeFeedbackForm.objects.filter(created_by=request.user, about__in=teammates)
+        serializer = EmployeeFormSerializer(forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
