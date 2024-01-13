@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 
-from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiResponse
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample
+from salary.models import TeamMember
 
 User = get_user_model()
 
@@ -18,15 +19,48 @@ class TeammatesAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        summary='Get user teammates',
+        responses=inline_serializer(
+            name="SuccessfulResponseGetTeammates",
+            fields={"example": serializers.CharField()},
+        ),
+        examples=[
+            OpenApiExample(
+                "Example teammates response.",
+                value={"teammates": [
+                    {
+                        'id': '3',
+                        "username": "test_teammate1@test.ru",
+                        "first_name": "Иван",
+                        "last_name": "Иванов",
+                        "gender": "male",
+                        "status_level": 'null',
+                        "teams__name": "Test project"
+                    },
+                    {
+                        'id': '8',
+                        "username": "test_teammate2@test.ru",
+                        "first_name": "Андрей",
+                        "last_name": "Андреев",
+                        "gender": "male",
+                        "status_level": 'null',
+                        "teams__name": "Test project"
+                    }]
+                },
+                request_only=False,
+                response_only=True,
+            ),
+        ],
+        summary='Get teammates data',
+        description='Gives data about logged in employee and teammates',
         tags=['review'],
     )
     def get(self, request):
-        """Gives data about loged in employee and teammates"""
+        teams = request.user.teams.all()
 
-        teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
+        teammates = User.objects.filter(teams__in=teams).exclude(username=request.user.username)
         context = {
-            'teammates': list(teammates.values('id', 'username', 'first_name', 'last_name', 'gender', 'status_level')),
+            'teammates': list(
+                teammates.values('id', 'username', 'first_name', 'last_name', 'gender', 'status_level', 'teams__name')),
         }
         return Response(context, status=status.HTTP_200_OK)
 
@@ -122,8 +156,16 @@ class TeamLeadFormsAPIView(APIView):
         tags=['review'],
     )
     def get(self, request):
-        if not request.user.is_team_lead:
-            return Response("User is not Team lead", status=status.HTTP_403_FORBIDDEN)
+        team_memberships = TeamMember.objects.filter(user=request.user)
+
+        if not team_memberships.exists():
+            return Response("User is not linked to any team", status=status.HTTP_403_FORBIDDEN)
+
+        is_team_lead = any(team_member.role.is_team_lead for team_member in team_memberships)
+
+        if not is_team_lead:
+            return Response("User is not a team leader", status=status.HTTP_403_FORBIDDEN)
+
         forms = TeamLeadFeedbackForm.objects.filter(created_by=request.user)
         serializer = TeamleadFormSerializer(forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -172,4 +214,4 @@ class PerfomanceReviewAPIView(APIView):
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(data="wrong parameters", status=status.HTTP_400_BAD_REQUEST)
-
+      

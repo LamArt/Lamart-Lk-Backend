@@ -24,9 +24,28 @@ class EventCreationSerializer(serializers.Serializer):
     end_time = serializers.TimeField()
     rrule = EventRRuleSerializer(required=False)
     create_conference = serializers.BooleanField(required=True)
+    attendees = serializers.ListField(required=False, child=serializers.EmailField())
 
 
 class MailCountSerializer(serializers.Serializer):
     count = serializers.CharField()
 
 
+class IssuePrioritySerializer(serializers.Serializer):
+    name = serializers.CharField()
+    id = serializers.CharField()
+
+
+class IssueSubTaskSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    priority = IssuePrioritySerializer()
+    story_points = serializers.IntegerField()
+
+
+class IssueDataSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    priority = IssuePrioritySerializer()
+    story_points = serializers.IntegerField()
+    subtasks = serializers.ListField(child=IssueSubTaskSerializer())

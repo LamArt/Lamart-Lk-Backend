@@ -1,21 +1,22 @@
 from django.db import models
-from authentication.models import User
+from authentication.models import User, Team
 
 
-class Salary(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    rate = models.PositiveIntegerField(null=True, blank=True)
-    last_salary_date = models.DateField(null=True, blank=True)
-    credit = models.IntegerField(default=0)
-    reward = models.PositiveIntegerField(default=0)
+class Role(models.Model):
+    name = models.CharField(max_length=50)
+    salary_formula = models.TextField(blank=False, null=False)
+    is_team_lead = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.user}'
+        return self.name
 
-    @classmethod
-    def get_salary_data(cls, user_instance):
-        try:
-            user_data = cls.objects.get(user=user_instance)
-            return user_data
-        except cls.DoesNotExist:
-            return None
+
+class TeamMember(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='team_memberships')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='memberships')
+    credit = models.PositiveIntegerField(null=True, blank=True)
+    reward = models.PositiveIntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.team.name} - {self.user} -  {self.role.name}"

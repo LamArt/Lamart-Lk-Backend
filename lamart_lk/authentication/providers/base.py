@@ -1,7 +1,7 @@
-import requests
 from abc import ABC, abstractmethod
 from django.contrib.auth import get_user_model
 
+from local_settings import *
 from authentication.models import ProviderToken
 
 User = get_user_model()
@@ -27,14 +27,15 @@ class ProviderFactory:
                 'key': 'Authorization',
                 'value': 'Bearer'
             },
-            'data_params': {
-                'client_id': 'OFe6NSNJiBJypHiGeEMinCsohVPFfXAV',
-                'client_secret': 'ATOAfeVYlgQVJPi7CNSkvAtPLvymr6Uyw4foeBjC1-iZorQUFDn7TvO6r_58KArFSn4h4EE5A385',
-                'redirect_uri': 'http://localhost:5004/salary'
-            }
+                'data_params': OAUTH_APPS['ATLASSIAN'] # defined in local_settings
+                # examle OAUTH_APPS = {
+                #             'ATLASSIAN': {
+                #                   'client_id': '12345678',
+                #                   'client_secret': '1234567890',
+                #                   'redirect_uri': 'http://localhost' }}
         }
     }
-
+    
     @classmethod
     def get_provider(cls, provider_name):
         provider = cls.PROVIDERS.get(provider_name)
@@ -58,8 +59,9 @@ class BaseProvider(ProviderFactory):
             self.data_params = None
 
     @staticmethod
-    def save_tokens(tokens, expires_in, user, provider_name, organisation):
+    def save_tokens(tokens, expires_in, user, provider_name, organisation, email=None):
         try:
+            user_provider_email = email if email is not None else user.email
             provider_token, created = ProviderToken.objects.update_or_create(
                 user=user,
                 provider=provider_name,
@@ -67,7 +69,8 @@ class BaseProvider(ProviderFactory):
                 defaults={
                     'access_token': tokens['access'],
                     'refresh_token': tokens['refresh'],
-                    'expires_in': expires_in
+                    'expires_in': expires_in,
+                    'user_provider_email': user_provider_email
                 }
             )
             return provider_token
