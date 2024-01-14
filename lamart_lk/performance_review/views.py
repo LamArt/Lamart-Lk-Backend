@@ -110,7 +110,8 @@ class FormsAboutTeammatesAPIView(APIView):
         tags=['review']
     )
     def get(self, request):
-        teammates = User.objects.filter(team=request.user.team).exclude(username=request.user.username)
+        teams = request.user.teams.all()
+        teammates = User.objects.filter(teams__in=teams).exclude(username=request.user.username)
         forms = EmployeeFeedbackForm.objects.filter(created_by=request.user, about__in=teammates)
         serializer = EmployeeFormSerializer(forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
