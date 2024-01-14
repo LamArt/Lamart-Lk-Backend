@@ -3,3 +3,4 @@ from .models import *
 
 admin.site.register(EmployeeFeedbackForm)
 admin.site.register(TeamLeadFeedbackForm)
+admin.site.register(PerformanceReview)
