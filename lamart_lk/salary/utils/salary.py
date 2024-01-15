@@ -26,7 +26,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager, TeamMember
 
         for issue in issue_data.get('issues', []):
             key = issue['key'].split('-')[0]
-            story_points = issue['fields'].get('customfield_10129')
+            story_points = issue['fields'].get('customfield_10052')
             if story_points is not None:
                 if key not in project_points:
                     project_points[key] = 0
@@ -103,7 +103,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager, TeamMember
 
                     if start_time <= issue_date <= end_time:
                         time_name = start_time.strftime('%B')
-                        time_data[f"{time_name}"] += issue['fields']['customfield_10129']
+                        time_data[f"{time_name}"] += issue['fields']['customfield_10052']
 
         projects_data = self.project_manager.get_projects_data_for_user()
         time_delta = 12

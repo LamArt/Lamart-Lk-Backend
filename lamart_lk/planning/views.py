@@ -194,7 +194,7 @@ class AtlassianJiraIssuesView(APIView):
                     'name': issue['fields']['priority']['name'],
                     'id': str(issue['fields']['priority']['id'])
                 }
-                issue_info['story_points'] = issue['fields']['customfield_10129']
+                issue_info['story_points'] = issue['fields']['customfield_10052']
 
                 if not (issue['fields']['description']):
                     issue_info['description'] = None
@@ -249,7 +249,7 @@ class AtlassianJiraIssuesView(APIView):
                         f' AND statusCategory IN (2, 4)'
             params = {
                 'jql': jql_query,
-                'fields': 'priority, summary, description, parent, customfield_10129',
+                'fields': 'priority, summary, description, parent, customfield_10052',
                 'maxResults': 100000,
             }
 
