@@ -41,7 +41,7 @@ class AtlassianUserProfile:
         assignee = ''
         if email is not None:
             assignee = f'AND assignee="{email}"'
-        jql_query = f'({query_of_projects}) AND created>={created_type} {assignee} AND status IN ("DONE", "НА ПРОВЕРКЕ")'
+        jql_query = f'({query_of_projects}) AND created>={created_type} {assignee} AND status IN ("DONE")'
         params = {
             'jql': jql_query,
             'fields': 'customfield_10052,created',

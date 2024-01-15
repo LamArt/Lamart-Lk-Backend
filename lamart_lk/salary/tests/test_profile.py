@@ -56,7 +56,7 @@ class TestAtlassianUserProfile(unittest.TestCase):
 
         with patch('salary.utils.profile.requests.get', return_value=mock_response) as mock_get:
             tasks = self.atlassian_profile.take_tasks(projects, created_type='2023-12-12', email=email)
-            jql_query = f'(project=TEST-1 OR project=TEST-2 OR project=TEST-3) AND created>=2023-12-12 AND assignee="{email}" AND status IN ("DONE", "НА ПРОВЕРКЕ")'
+            jql_query = f'(project=TEST-1 OR project=TEST-2 OR project=TEST-3) AND created>=2023-12-12 AND assignee="{email}" AND status IN ("DONE")'
 
             mock_get.assert_called_once_with(
                 f'{self.atlassian_profile.search_url}/search',
