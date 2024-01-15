@@ -44,7 +44,7 @@ class AtlassianUserProfile:
         jql_query = f'({query_of_projects}) AND created>={created_type} {assignee} AND status IN ("DONE", "НА ПРОВЕРКЕ")'
         params = {
             'jql': jql_query,
-            'fields': 'customfield_10016,created',
+            'fields': 'customfield_10129,created',
             'maxResults': 100000,
         }
         rq = requests.get(f'{self.search_url}/search', headers=self.headers, params=params)
