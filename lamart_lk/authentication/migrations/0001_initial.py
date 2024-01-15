@@ -76,8 +76,8 @@ class Migration(migrations.Migration):
             name='ProviderToken',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('access_token', models.CharField(max_length=256)),
-                ('refresh_token', models.CharField(blank=True, max_length=512, null=True)),
+                ('access_token', models.CharField(max_length=1024)),
+                ('refresh_token', models.CharField(blank=True, max_length=1024, null=True)),
                 ('expires_in', models.PositiveIntegerField()),
                 ('provider', models.CharField(max_length=64)),
                 ('organisation', models.CharField(max_length=256)),
