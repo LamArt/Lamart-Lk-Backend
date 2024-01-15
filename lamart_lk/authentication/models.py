@@ -24,8 +24,8 @@ class User(AbstractUser):
 
 
 class ProviderToken(models.Model):
-    access_token = models.CharField(max_length=2048)
-    refresh_token = models.CharField(max_length=2048, null=True, blank=True)
+    access_token = models.CharField(max_length=16000)
+    refresh_token = models.CharField(max_length=16000, null=True, blank=True)
     expires_in = models.PositiveIntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='provider_tokens')
     provider = models.CharField(max_length=64)
