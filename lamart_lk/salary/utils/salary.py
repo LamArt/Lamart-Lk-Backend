@@ -103,7 +103,7 @@ class SalaryStoryPoints(AtlassianUserProfile, EmployeeProjectManager, TeamMember
 
                     if start_time <= issue_date <= end_time:
                         time_name = start_time.strftime('%B')
-                        time_data[f"{time_name}"] += issue['fields']['customfield_10052']
+                        time_data[f"{time_name}"] += issue['fields'].get('customfield_10052', 0)
 
         projects_data = self.project_manager.get_projects_data_for_user()
         time_delta = 12

@@ -194,7 +194,7 @@ class AtlassianJiraIssuesView(APIView):
                     'name': issue['fields']['priority']['name'],
                     'id': str(issue['fields']['priority']['id'])
                 }
-                issue_info['story_points'] = issue['fields']['customfield_10052']
+                issue_info['story_points'] = issue['fields'].get('customfield_10052', 0)
 
                 if not (issue['fields']['description']):
                     issue_info['description'] = None
