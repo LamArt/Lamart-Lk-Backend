@@ -1,6 +1,6 @@
 from datetime import timedelta
-from pathlib import Path
-from lamart_lk.env import env
+import os
+from lamart_lk.env import env, BASE_DIR
 
 SECRET_KEY = env('SECRET_KEY') # define django SECRET_KEY in .env file
 DEBUG = env('DEBUG', default=True)
@@ -143,5 +143,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
