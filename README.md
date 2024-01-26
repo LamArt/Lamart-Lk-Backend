@@ -7,7 +7,7 @@
 1) clone from git
 2) switch to dev
 3) create, active venv
-4) create .env and local_settings.py
+4) create .env
 5) в .env поменять POSTGRES_HOST="db" на "localhost"
 6) open docker dekctop
 7) in terminal: `docker-compose up --build -d`

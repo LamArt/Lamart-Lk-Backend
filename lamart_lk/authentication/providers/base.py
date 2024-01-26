@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from django.contrib.auth import get_user_model
 
-from local_settings import *
+from lamart_lk.settings import env
 from authentication.models import ProviderToken
 
 User = get_user_model()
@@ -18,7 +18,7 @@ class ProviderFactory:
                 'value': 'OAuth'
             },
             'organisations': {
-                'lamart': '.site',
+                'lamart': env('MAIL_DOMAIN')
             }
         },
         'atlassian': {
@@ -27,12 +27,11 @@ class ProviderFactory:
                 'key': 'Authorization',
                 'value': 'Bearer'
             },
-                'data_params': OAUTH_APPS['ATLASSIAN'] # defined in local_settings
-                # examle OAUTH_APPS = {
-                #             'ATLASSIAN': {
-                #                   'client_id': '12345678',
-                #                   'client_secret': '1234567890',
-                #                   'redirect_uri': 'http://localhost' }}
+                'data_params': {
+                    'client_id': env('ATTLASSIAN_CLIENT_ID'),
+                    'client_secret': env('ATTLASSIAN_CLIENT_SECRET'),
+                    'redirect_uri': env('ATTLASSIAN_REDIRECT_URI')
+                }
         }
     }
     

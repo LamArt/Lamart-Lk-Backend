@@ -1,10 +1,9 @@
-from local_settings import *
 from datetime import timedelta
 from pathlib import Path
 from lamart_lk.env import env
 
-SECRET_KEY = SECRET_KEY # define django SECRET_KEY in local_settings
-DEBUG = True
+SECRET_KEY = env('SECRET_KEY') # define django SECRET_KEY in .env file
+DEBUG = env('DEBUG', default=True)
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
