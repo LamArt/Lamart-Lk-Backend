@@ -4,7 +4,7 @@ cd lamart_lk
 
 # collect static
 echo "Collect static files"
-python manage.py collectstatic --noinput
+python manage.py collectstatic
 
 # Apply database migrations
 echo "Apply database migrations"
