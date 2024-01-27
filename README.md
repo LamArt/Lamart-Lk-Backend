@@ -4,21 +4,13 @@
 
 ## Deploy
 
-1) clone from git
-2) switch to dev
-3) create, active venv
-4) create .env
-5) в .env поменять POSTGRES_HOST="db" на "localhost"
-6) open docker dekctop
-7) in terminal: `docker-compose up --build -d`
-7) `cd lamart_lk` `python manage.py makemigrations` `python manage.py migrate`
-8) создать админа, если надо
-9) вернуть db в шаге 5
-10) `docker-compose up --build`
+1) Create .env [example](.env.example)
+2) Run docker
+3) In terminal: `docker-compose up --build`
 
 ## Docs
 
-After deploying watch API doc here -> http://127.0.0.1:8000/redoc/ or http://127.0.0.1:8000/swagger/
+After deploying you can find API docs here -> [Redoc](http://127.0.0.1:8000/redoc/) or [Swagger](http://127.0.0.1:8000/swagger/)
 
 ## Authentication
 
