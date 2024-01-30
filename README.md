@@ -4,9 +4,29 @@
 
 ## Deploy
 
-1) Create .env [example](.env.example)
+1) Create [.env](.env.example)
 2) Run docker
 3) In terminal: `docker-compose up --build`
+
+## Development
+
+1. Run db
+```
+docker-compose up db
+```
+2. Create virtualenv
+```
+python -m venv [path to venv folder]
+```
+3. Activate virtualenv
+```
+source [path to venv folder]/Scripts/activate
+```
+4. Install requirements. Don't forget to change production.txt to local.txt in requirements.txt if it's necessary!
+```
+pip install -r requirements/local.txt
+```
+5. 
 
 ## Docs
 
