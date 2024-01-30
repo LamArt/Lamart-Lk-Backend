@@ -1,8 +1,31 @@
 from rest_framework import serializers
-from .models import Form
+from rest_framework.fields import SerializerMethodField
+from rest_framework.serializers import Serializer
 
-class FormSerializer(serializers.ModelSerializer):
+from .models import *
+
+
+class EmployeeFormSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Form
-        exclude = ['created_by', 'about', 'feedback_date']
-        
+        model = EmployeeFeedbackForm
+        exclude = ['feedback_date']
+
+
+class TeamleadFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamLeadFeedbackForm
+        exclude = ['created_by', 'feedback_date', 'manager_approve']
+
+class PerformanceReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PerformanceReview
+        fields = '__all__'
+
+    def update(self, instance, validated_data):
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
+
+
