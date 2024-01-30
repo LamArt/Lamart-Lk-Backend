@@ -8,45 +8,48 @@
 2) Run docker
 3) In terminal: `docker-compose up --build`
 
-## Development
-
-1. Run db
-```
-docker-compose up db
-```
-2. Create virtualenv
-```
-python -m venv [path to venv folder]
-```
-3. Activate virtualenv
-```
-source [path to venv folder]/Scripts/activate
-```
-4. Install requirements. Don't forget to change production.txt to local.txt in requirements.txt if it's necessary!
-```
-pip install -r requirements/local.txt
-```
-5. 
-
-## Docs
+## Api Docs
 
 After deploying you can find API docs here -> [Redoc](http://127.0.0.1:8000/redoc/) or [Swagger](http://127.0.0.1:8000/swagger/)
 
+## Development
+
+1. Create virtualenv
+```
+python -m venv [path to venv folder]
+```
+2. Activate virtualenv
+```
+source [path to venv folder]/Scripts/activate
+```
+3. Install requirements.
+```
+pip install -r requirements/local.txt
+```
+4. Set POSTGRES_HOST="localhost" in .env
+5. Run db
+```
+docker-compose up db --build -d
+```
+6. Make migrations, migrate and run server
+```
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+``` 
+
 ## Authentication
 
-API uses bearer JWT authentication, read docs for more info.
+API uses bearer JWT authentication, read API docs for more info.
 
-1) For login or sign up: exchange provider oauth token* to refresh and acess jwt /auth/exchange_token/
+1) For login or sign up: exchange provider [oauth token](https://yandex.ru/dev/id/doc/en/access)* to refresh and acess jwt /auth/exchange_token/
 2) Refresh the access token if it's no longer valid by using /auth/refresh/
 3) Refresh token expires after 12 hours, do step 1 to get new.
-
 * Yandex is the only provider available now.
-  dev token: https://oauth.yandex.ru/authorize?response_type=token&client_id=c120ba35adaf4278a8277e542b1a0cbd
-  "access_token" param in response url is what you looking for
-
+  
 ## Atlassian Provider
 
-To connect Jira as provider you need:
+To connect Jira you need:
 
 1) Create a new app in [Developer Console](https://developer.atlassian.com/console/myapps/)
 2) Add all permissions with Jira API like read and etc, but no more 50 scopes.
@@ -56,8 +59,4 @@ To connect Jira as provider you need:
    %3Ajira-data-provider%20offline_access&redirect_uri'. You can past it to the right place, all the difference is in
    the offline access parameter.
 6) After accepting all accesses "code=" param is what you need.
-7) Exchange your authorization code to JWT token by auth/exchange_token/
-
-* Only for developer url to take JIRA authorization code:
-
-  https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=OFe6NSNJiBJypHiGeEMinCsohVPFfXAV&scope=read%3Ajira-work%20manage%3Ajira-project%20manage%3Ajira-configuration%20read%3Ajira-user%20write%3Ajira-work%20manage%3Ajira-webhook%20manage%3Ajira-data-provider%20offline_access&redirect_uri=http%3A%2F%2Flocalhost%3A5004%2Fsalary&state=${YOUR_USER_BOUND_VALUE}&response_type=code&prompt=consent
+7) Exchange your authorization code to JWT token by auth/get_token_jira/
